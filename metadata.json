@@ -1,0 +1,6 @@
+{
+  "name": "Matriks Mum Analiz & Canlı Piyasa Terminali",
+  "description": "34 farklı mum formasyonunu otomatik tespit eden, teyit ve stoploss seviyelerini hesaplayan gerçek zamanlı mum grafiği okuma ve piyasa analiz platformu.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
