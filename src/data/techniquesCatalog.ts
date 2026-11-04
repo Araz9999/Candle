@@ -2,6 +2,77 @@ import type { TechniqueGuideItem } from '../types/market';
 
 export const TECHNIQUES_CATALOG: TechniqueGuideItem[] = [
   // =========================================================================
+  // BUZZ / TRADERS HAVEN — 50 CCI & 34 EMA STRATEJİSİ (4 MODÜL)
+  // =========================================================================
+  {
+    id: 'cci_50_34_anatomy',
+    sourceBook: '50 CCI Stratejisi',
+    category: 'İndikatör & Fibonacci',
+    title: '50 CCI & 34 EMA Sistemi Anatomisi ve İndikatör Eşdeğerlikleri',
+    subtitle: '34 EMA Eğimi, 50 CCI Sıfır Çizgisi = Düz 50 EMA, 14 EMA = 14 CCI ve 204 EMA (6:1 HTF)',
+    pdfPage: '50 CCI s. 1–9, 32–38',
+    overlayKey: 'showCCI50',
+    diagramType: 'cci_50_34_anatomy',
+    summary:
+      "Buzz ve Traders Haven tarafından geliştirilen sistemde; 34 EMA ana dinamik denge ve trend filtresidir (Cyan: yükseliş, Kahverengi/Kırmızı: düşüş). 50 CCI, eğimsiz düz bir 50 EMA'ya eşdeğerdir ve sıfır çizgisi geçişi fiyatın 50 EMA'yı kırmasıyla birebir örtüşür. 14 EMA kesişimi 14 CCI sıfır hattını, 204 EMA ise 6 kat büyük üst zaman diliminin (3000v / 500v) 34 EMA dengesini temsil eder.",
+    rules: [
+      '34 EMA Renk & Eğim Disiplini: 34 EMA yukarı eğimliyken cyan (boğa), aşağı eğimliyken koyu kahverengi/kırmızı (ayı) renge bürünür. Fiyat ve 34 EMA aynı yöndeyken ters yönde kontrat açılmaz.',
+      "50 CCI Sıfır Çizgisi = Düz 50 EMA: 50 CCI'ın sıfır çizgisini yukarı kesip yeşil histogram üretmesi, fiyatın düz 50 EMA üzerine yerleştiğini gösterir. Sıfır altı kırmızı histogram ayı bölgesidir.",
+      "204 EMA ve Chop Filtresi: 204 EMA, 6:1 oranındaki üst zaman diliminin 34 EMA'sıdır (örn. 500v grafikte 3000v 34 EMA). 14 CCI ±100 bandı içine sıkışıp 14 EMA düzleştiğinde piyasa testerededir (chop); kırılımlardan kaçınılmalıdır.",
+    ],
+  },
+  {
+    id: 'cci_5034_reversal',
+    sourceBook: '50 CCI Stratejisi',
+    category: 'Seviye & Trend',
+    title: 'Setup 1: "5034" Trend Dönüş Kesişimi (Reversal Trade)',
+    subtitle: "Fiyatın 34 EMA'yı ve 50 CCI'ın Sıfır Çizgisini Aynı Anda Kırarak Kapanması",
+    pdfPage: '50 CCI s. 10–19',
+    overlayKey: 'showCCI50',
+    diagramType: 'cci_5034_reversal',
+    summary:
+      '5034 kurulumu, tükenen bir trendin ardından yeni bir trendin doğuşunu haber veren ana dönüş formasyonudur. Genellikle bir destek/direnç seviyesi testi veya 50 CCI üzerinde "Shamu" (çift dip/tepe) yapısıyla olgunlaşır. Tetikleyici kural: Fiyatın 34 EMA\'yı kırıp üzerinde/altında kapanması ve AYNI ANDA 50 CCI\'ın sıfır çizgisini kırarak histogram rengini değiştirmesidir.',
+    rules: [
+      "Alış Tetikleyicisi (5034 Buy): Düşüş trendi sonrası fiyatın 34 EMA üzerine çıkıp kapanması + 50 CCI göstergesinin sıfır çizgisini yukarı kırarak yeşil renk alması. Bar kapanışında işleme girilir.",
+      "Satış Tetikleyicisi (5034 Sell): Yükseliş trendi sonrası fiyatın 34 EMA altına inip kapanması + 50 CCI göstergesinin sıfır çizgisini aşağı kırarak kırmızı renk alması. Bar kapanışında satış açılır.",
+      "Zorunlu İki Şart: Fiyat 34 EMA'yı kırdığı halde 50 CCI sıfırı geçememişse veya 50 CCI sıfırı kestiği halde fiyat 34 EMA'yı kıramamışsa işlem GEÇERSİZDİR; her iki teyit eşzamanlı olmalıdır.",
+    ],
+  },
+  {
+    id: 'cci_5034z_pullback',
+    sourceBook: '50 CCI Stratejisi',
+    category: 'Giriş Taktikleri & Risk Yönetimi',
+    title: 'Setup 2: "5034z" İlk Düzeltme Girişi (ZLR — Zero Line Reject)',
+    subtitle: '5034 Dönüşü Sonrası 34 EMA Denge Testi ve 14 CCI Sıfır Çizgisi Reddi Kancası',
+    pdfPage: '50 CCI s. 20–26',
+    overlayKey: 'showCCI50',
+    diagramType: 'cci_5034z_pullback',
+    summary:
+      "5034 dönüşünü kaçıranlar veya trend yönünde ek pozisyon almak isteyenler için en yüksek olasılıklı ilk geri çekilme taktiğidir. 5034 patlamasından sonra (genellikle 5–8 bar sürer) piyasa dengelenmek üzere 34 EMA'ya geri çekilir. Bu esnada 14 CCI sıfır hattına yaklaşır ve sıfır çizgisinden sekerek kanca (ZLR - Zero Line Reject) oluşturur.",
+    rules: [
+      '5034 Önkoşulu: Bu kurulum yalnızca yakın geçmişte başarılı bir 5034 dönüşü gerçekleşmiş ve 50 CCI sıfırın trend tarafında kaldığı (yeşil/kırmızı) durumlarda aranır.',
+      "34 EMA Denge Bölgesi: Fiyat geri çekilerek 34 EMA çizgisine dokunur veya çok yakınına gelir; 34 EMA dinamik destek/direnç işlevi görerek fiyatı savurur.",
+      '14 CCI ZLR Kancası: 14 CCI sıfır çizgisi bandında (yaklaşık -35..+35) yönünü tekrar ana trende çevirerek keskin bir "kanca" yapar. Kanca tamamlandığı an trend yönünde işleme girilir.',
+    ],
+  },
+  {
+    id: 'cci_50140_continuation',
+    sourceBook: '50 CCI Stratejisi',
+    category: 'Price Action & Piyasa Yapısı',
+    title: 'Setup 3: "50140" Güçlü Trend Yeniden Girişi (V-Pullback Re-Entry)',
+    subtitle: 'Derin Düzeltme Sonrası 14 CCI Sıfır Kırılımı ve Üst Zaman Dilimi ZLR Büyütmesi',
+    pdfPage: '50 CCI s. 27–31',
+    overlayKey: 'showCCI50',
+    diagramType: 'cci_50140_continuation',
+    summary:
+      "Oturmuş ve güçlü bir trendde (50 CCI sıfırdan oldukça uzak, ±50 veya ±100 seviyelerine yakınken) fiyatın 14 EMA'yı delip 34 EMA'ya doğru daha derin bir V-düzeltmesi yapmasıyla oluşur. Bu esnada 14 CCI derin karşıt bölgeye (±75..200) çekilir. Düzeltme bittiğinde 14 CCI sıfır çizgisini ana trend yönünde tekrar kırdığında ve fiyat 14 EMA üzerine kapandığında muazzam bir trend devam girişi sağlanır.",
+    rules: [
+      'Oturmuş Trend Şartı: 5034 ve 5034z aşamaları geride kalmış, 50 CCI trend yönünde güçlü pozitif/negatif bölgede kalmaya devam etmelidir.',
+      '14 CCI Derin Düzeltmesi: 14 CCI karşıt aşırı bölgeye (-75..-200 veya +75..+200) savrulur; fakat 50 CCI sıfırın ters tarafına geçmez (spread rengini korur).',
+      "14 CCI Sıfır Kırılımı (Zero Cross): 14 CCI sıfır çizgisini trend yönünde tekrar kesip kapandığı an (fiyatın 14 EMA'yı geri kazanmasıyla) işleme girilir. Bu kurulum, üst zaman dilimindeki bir ZLR'nin mikroskobik büyütmesidir.",
+    ],
+  },
+  // =========================================================================
   // CASEY STUBBS (TRADING STRATEGY GUIDES) — KELTNER TRADING STRATEGY (4 MODÜL)
   // =========================================================================
   {
@@ -642,6 +713,78 @@ export const TECHNIQUES_CATALOG: TechniqueGuideItem[] = [
       'Yükseliş Trendinde Çizim: Görülen en düşük dip noktasından, ulaşılan en yüksek tepe noktasına doğru çekilir.',
       'Düşüş Trendinde Çizim: Görülen en yüksek tepe noktasından, inilen en düşük dip noktasına doğru çekilir.',
       '%50 ve %61.8 Altın Kesişim: Profesyonel yatırımcıların en yoğun izlediği geri çekilme alanıdır; yatay rol değişimi seviyesiyle çakıştığında Sniper giriş bölgesi oluşturur.',
+    ],
+  },
+  {
+    id: 'courtney_dual_oscillator_system',
+    sourceBook: 'Courtney Capital',
+    category: 'Giriş Taktikleri & Risk Yönetimi',
+    title: 'Courtney Dual Osilatör Sistemi (Slow Stoch 13,8,4 & CCI 20)',
+    subtitle: 'Neville Chester / Courtney Capital — İki Göstergeli Kusursuz Giriş Modeli',
+    pdfPage: 'Courtney Capital s. 3 – 30',
+    overlayKey: 'showCourtney',
+    diagramType: 'courtney_dual_oscillator',
+    summary:
+      'Yalnızca tek bir göstergeye asla güvenilmez. Courtney Capital stratejisi, George Lane hızı ölçen Slow Stochastic (13, 8, 4) ile Lambert trend ve döngü sapmasını ölçen CCI (20) osilatörünü fiyat trend çizgisiyle birleştirir. Fiyat ana trend çizgisine çekildiğinde iki osilatörün aynı anda aşırı satımdan/alımdan dönmesiyle kusursuz giriş tetiklenir.',
+    rules: [
+      'Dual Teyit Şartı: Asla tek göstergeyle pozisyona girilmez; Slow Stoch (13, 8, 4) ve CCI (20) aynı yönde teyit üretmelidir.',
+      'Trend Destek Teması: Yükseliş trendinde ana yükselen trend çizgisine (veya destek seviyesine) geri çekilme beklenir.',
+      'Tetik Kesişimi: Stoch < 25 aşırı satım bölgesinde %K çizgisi %D tetik çizgisini yukarı keserken, CCI (20) aşırı satımdan (-100 veya -80 altı) yukarı kanca yapar.',
+      'Giriş Zamanlaması: Fiyat, geri çekilmedeki kısa vadeli karşıt trend çizgisini (trigger line) yukarı kırdığı an işleme girilir.',
+    ],
+  },
+  {
+    id: 'courtney_stoch_13_8_4_momentum',
+    sourceBook: 'Courtney Capital',
+    category: 'İndikatör & Fibonacci',
+    title: 'Slow Stochastic (13, 8, 4) Momentum & Hız Yasası',
+    subtitle: 'George Lane Prensibi: Momentum Hızı Fiyattan Önce Yön Değiştirir',
+    pdfPage: 'Courtney Capital s. 4 – 13, 18',
+    overlayKey: 'showCourtney',
+    diagramType: 'courtney_stoch_13_8_4',
+    summary:
+      'George Lane tarafından 1950’lerde geliştirilen Stokastik, fiyatın kendisini değil momentum hızını ölçer. Süratle fırlayan bir roketin yere düşmeden önce havada hız kaybetmesi gibi, piyasa dönüşlerinden önce de Stokastik hızı kesilir. Courtney Capital, 13 periyotluk aralığı önce 3 SMA, ardından 8 SMA ile yumuşatıp 4 SMA tetik çizgisi (%D) ile filtreler.',
+    rules: [
+      'Lane Hız Yasası: Fiyat tepesi veya dibi oluşmadan önce, Stokastik hızı yavaşlar ve yön değiştirir (Leading gösterge gücü).',
+      'Parametre Kurulumu: %K = 13 lookback periyodu, yumuşatma = 8 periyot SMA, %D Tetik Çizgisi = 4 periyot SMA.',
+      'Aşırı Bölgeler: 80 üzeri aşırı alım, 20 altı aşırı satım. Kesişimlerin mutlaka bu uç sınırlarda (veya <25 / >75) gerçekleşmesi aranır.',
+      'Kesişim Kuralı: Slow %K çizgisi Slow %D çizgisini aşırı satım bölgesinde yukarı kestiğinde alış, aşırı alım bölgesinde aşağı kestiğinde satış uyarısı verir.',
+    ],
+  },
+  {
+    id: 'courtney_cci20_coincidental_divergence',
+    sourceBook: 'Courtney Capital',
+    category: 'Seviye & Trend',
+    title: 'CCI (20) Hem Öncü (Leading) Hem Eşzamanlı (Coincidental) Kullanım',
+    subtitle: 'Donald Lambert 1980 Formülü: 0.015 Katsayısı, Trend Başlatıcı ve Uyumsuzluklar',
+    pdfPage: 'Courtney Capital s. 14 – 17, 26 – 29',
+    overlayKey: 'showCourtney',
+    diagramType: 'courtney_cci20_coincidental',
+    summary:
+      'CCI Tipik Fiyatın 20 periyotluk SMA’dan ortalama sapmasını ölçer. 0.015 katsayısı verilerin %70-80’ini ±100 bandında tutar. Neville Chester, CCI’ın çift yönlü doğasını kullanır: +100 üzerine patlama eşzamanlı olarak güçlü trend başlangıcıdır; ancak +100 üzerindeki tepelerde fiyat yeni zirve yaparken CCI daha düşük tepe yaparsa güçlü bir öncü uyumsuzluk (leading divergence) üretir.',
+    rules: [
+      'Eşzamanlı (Coincidental) Trend Teyidi: CCI sıfırı ve +100 seviyesini yukarı patlattığında boğa trendi hızlanır; -100 altına indiğinde ayı trendi derinleşir.',
+      'Aşırı Uç Dönüşü (Leading): CCI (20) ±100 dışına çıktıktan sonra geri dönüp seviyeyi tekrar test ettiğinde düzeltme/dönüşün ilk öncü sinyalini verir.',
+      'Boğa Uyumsuzluğu (Bullish Divergence): Fiyat grafiğinde daha düşük dipler (Lower Lows) oluşurken, CCI (20) daha yüksek dipler (Higher Lows) üretiyorsa kurumsal dönüş yaklaşmıştır.',
+      'Ayı Uyumsuzluğu (Bearish Divergence): Fiyat yeni en yüksek zirveyi yaparken CCI tepeyi aşamaz ve alçalan tepe yaparsa sert satış uyarısıdır.',
+    ],
+  },
+  {
+    id: 'courtney_trend_ignore_overbought_filter',
+    sourceBook: 'Courtney Capital',
+    category: 'Price Action & Piyasa Yapısı',
+    title: 'Courtney Kuralı: Güçlü Trendde Aşırı Alım/Satımı Yok Say (Ignore)',
+    subtitle: 'Neville Chester Hayati İlkesi: Trend Varken Osilatör Aşırılığı Karşıt Sinyal Değildir',
+    pdfPage: 'Courtney Capital s. 15, 19, 21 – 25',
+    overlayKey: 'showCourtney',
+    diagramType: 'courtney_trend_ignore_filter',
+    summary:
+      'Amatör yatırımcıların en büyük hatası, güçlü bir boğa trendinde Stokastik 80 üzerine veya CCI +100 üzerine çıktı diye açığa satış yapmaktır. Neville Chester kuralı açıktır: Güçlü bir trend varsa aşırı alım/satım bölgeleri yok sayılır! Trend sırasında osilatörler günlerce 80 üzerinde yapışık kalabilir; bu zayıflık değil, aşırı trend gücü göstergesidir.',
+    rules: [
+      'Ignore Kuralı (Slayt 15): Piyasa belirgin bir trend kanalında hareket ederken, osilatörün aşırı alımda olması SAT anlamına GELMEZ.',
+      'Yalnızca Trend Yönünde Kullanım: Güçlü yükseliş trendinde yalnızca AŞIRI SATIM (<20) düzeltmelerindeki AL sinyalleri işleme alınır.',
+      'Direnç Duvarı Kırılımı: Fiyat direnç seviyesini kırıp trend başlatırken osilatör 80 üstüne fırlar; bu aşırı alım değil trend onayıdır.',
+      'Pozisyondan Çıkış Zamanlaması: Trend devam ederken aşırı alımda erken çıkılmaz; ancak belirgin tepe uyumsuzluğu ve karşıt trend çizgisi kırılımı olduğunda kar realizasyonu yapılır.',
     ],
   },
 ];

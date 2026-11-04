@@ -28,13 +28,7 @@ export function PatternEncyclopediaView({
 }: PatternEncyclopediaViewProps) {
   const [section, setSection] = useState<'techniques' | 'candles'>('techniques');
   const [techSourceFilter, setTechSourceFilter] = useState<
-    | 'all'
-    | 'Keltner Stratejisi'
-    | 'Ampirik Optimizasyon (SFU)'
-    | 'Bollinger Stratejisi'
-    | 'Greg Morris'
-    | 'Trading Bible'
-    | 'Grafik Okuma'
+    'all' | TechniqueGuideItem['sourceBook']
   >('all');
   const [techCategoryFilter, setTechCategoryFilter] = useState<
     'all' | TechniqueGuideItem['category']
@@ -105,10 +99,10 @@ export function PatternEncyclopediaView({
             Price Action &amp; Teknik Analiz Bilgi Bazası ({totalModules} Modül)
           </h1>
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-            Keltner Kanalı 3-Yöntem Sistemi (20 EMA ± 2 ATR, ADX&gt;20, RSI-2 &amp; StochRSI),
-            Ampirik Bollinger Optimizasyonu (SFU: Denklem 5/6 &amp; N* Pencere), Bollinger
-            Stratejisi (BBMA &amp; RSI+BB), Greg Morris, Trading Bible, Grafik Okuma ve{' '}
-            {PATTERNS_CATALOG.length} Mum Formasyonu.
+            Courtney Capital Dual Osilatör Sistemi (Slow Stoch 13,8,4 &amp; CCI 20), 50 CCI &amp; 34 EMA
+            Sistemi (5034, 5034z, 50140 &amp; 204 EMA), Keltner Kanalı 3-Yöntem (20 EMA ± 2 ATR),
+            Ampirik Bollinger Optimizasyonu (SFU), Bollinger Stratejisi (BBMA &amp; RSI+BB), Greg Morris,
+            Trading Bible, Grafik Okuma ve {PATTERNS_CATALOG.length} Mum Formasyonu.
           </p>
         </div>
 
@@ -144,12 +138,12 @@ export function PatternEncyclopediaView({
             className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
           >
             <FileText className="w-4 h-4" />
-            <span>Kaynak Dokümanlar (7)</span>
+            <span>Kaynak Dokümanlar (9)</span>
           </button>
         </div>
       </div>
 
-      {/* SECTION A: STRATEJİ & GRAFİK OKUMA MODÜLLERİ (37 MODÜL) */}
+      {/* SECTION A: STRATEJİ & GRAFİK OKUMA MODÜLLERİ (45 MODÜL) */}
       {section === 'techniques' && (
         <>
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -159,6 +153,8 @@ export function PatternEncyclopediaView({
                 {(
                   [
                     { id: 'all', label: `Tümü (${TECHNIQUES_CATALOG.length})` },
+                    { id: 'Courtney Capital', label: 'Courtney Capital (4)' },
+                    { id: '50 CCI Stratejisi', label: '50 CCI Sistemi (4)' },
                     { id: 'Keltner Stratejisi', label: 'Keltner Stratejisi (4)' },
                     { id: 'Ampirik Optimizasyon (SFU)', label: 'Ampirik BB — SFU (5)' },
                     { id: 'Bollinger Stratejisi', label: 'Bollinger Stratejisi (4)' },

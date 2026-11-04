@@ -776,6 +776,8 @@ export function CandleAnatomyPanel({
                     { key: 'showBollinger', label: 'Bollinger & BBMA' },
                     { key: 'useAdaptiveBollinger', label: `Opt. BB (N*=${techAnalysis.bollingerOptimization.optimalWindowN})` },
                     { key: 'showKeltner', label: 'Keltner (20,2 ATR)' },
+                    { key: 'showCCI50', label: '50 CCI & 34 EMA' },
+                    { key: 'showCourtney', label: 'Courtney (13,8,4 + CCI)' },
                     { key: 'showMACD', label: 'MACD (12,26,9)' },
                     { key: 'showMorrisFilter', label: 'Morris (%D & RSI)' },
                   ] as Array<{ key: ChartOverlayKey; label: string }>
@@ -1280,6 +1282,295 @@ export function CandleAnatomyPanel({
                     {techAnalysis.keltnerStrategy.pullbackStochRsiSignal.label}
                   </span>
                 </div>
+              </div>
+            </div>
+
+            {/* 00E. The 50 CCI & 34 EMA Stratejisi (Buzz / Traders Haven — 5034, 5034z, 50140, 204 EMA) */}
+            <div className="space-y-1.5 pb-3 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-semibold text-slate-900 dark:text-slate-100">
+                  50 CCI &amp; 34 EMA Sistemi (Traders Haven)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onToggleOverlay('showCCI50')}
+                  className={`px-2 py-0.5 text-[10.5px] font-mono font-semibold rounded border transition-colors whitespace-nowrap shrink-0 ${
+                    settings.showCCI50
+                      ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-700 dark:text-cyan-300'
+                      : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {settings.showCCI50 ? '✓ 50 CCI Aktif' : '50 CCI Göster'}
+                </button>
+              </div>
+
+              <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 space-y-2">
+                <div>
+                  <span className="text-[10.5px] text-slate-500 dark:text-slate-400 block">
+                    Trend &amp; Eşdeğerlik Durumu
+                  </span>
+                  <span
+                    className={`font-semibold ${
+                      techAnalysis.cci50Strategy.trendState === 'bull_trend'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : techAnalysis.cci50Strategy.trendState === 'bear_trend'
+                          ? 'text-red-600 dark:text-red-400'
+                          : techAnalysis.cci50Strategy.trendState === 'chop'
+                            ? 'text-amber-600 dark:text-amber-400'
+                            : 'text-slate-600 dark:text-slate-300'
+                    }`}
+                  >
+                    {techAnalysis.cci50Strategy.trendLabel}
+                  </span>
+                  {techAnalysis.cci50Strategy.isChopZone && (
+                    <span className="block mt-0.5 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                      ⚠️ Testere / Chop Bölgesi (14 CCI ±100 Arasında · Kırılımlardan Kaçının!)
+                    </span>
+                  )}
+                </div>
+
+                {/* 50 CCI, 14 CCI & 34 EMA Values */}
+                <div className="pt-1.5 border-t border-slate-200/70 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 font-mono tabular-nums text-[10.5px] text-slate-600 dark:text-slate-300">
+                  <span>
+                    50 CCI (Düz 50 EMA):{' '}
+                    <strong
+                      className={
+                        (techAnalysis.cci50Strategy.cci50Value ?? 0) > 0
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : (techAnalysis.cci50Strategy.cci50Value ?? 0) < 0
+                            ? 'text-red-600 dark:text-red-400'
+                            : 'text-slate-500'
+                      }
+                    >
+                      {techAnalysis.cci50Strategy.cci50Value != null
+                        ? `${techAnalysis.cci50Strategy.cci50Value > 0 ? '+' : ''}${techAnalysis.cci50Strategy.cci50Value}`
+                        : '—'}
+                    </strong>
+                  </span>
+                  <span>
+                    14 CCI:{' '}
+                    <strong
+                      className={
+                        (techAnalysis.cci50Strategy.cci14Value ?? 0) > 0
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : (techAnalysis.cci50Strategy.cci14Value ?? 0) < 0
+                            ? 'text-red-600 dark:text-red-400'
+                            : 'text-slate-500'
+                      }
+                    >
+                      {techAnalysis.cci50Strategy.cci14Value != null
+                        ? `${techAnalysis.cci50Strategy.cci14Value > 0 ? '+' : ''}${techAnalysis.cci50Strategy.cci14Value}`
+                        : '—'}
+                    </strong>
+                  </span>
+                  <span>
+                    34 EMA:{' '}
+                    <strong
+                      className={
+                        techAnalysis.cci50Strategy.ema34Slope === 'up'
+                          ? 'text-cyan-600 dark:text-cyan-400'
+                          : techAnalysis.cci50Strategy.ema34Slope === 'down'
+                            ? 'text-rose-600 dark:text-rose-400'
+                            : 'text-slate-500'
+                      }
+                    >
+                      {techAnalysis.cci50Strategy.ema34Slope === 'up'
+                        ? 'Cyan (Boğa)'
+                        : techAnalysis.cci50Strategy.ema34Slope === 'down'
+                          ? 'Kahve (Ayı)'
+                          : 'Yatay'}
+                    </strong>
+                  </span>
+                </div>
+
+                {/* Setup 1: 5034 Reversal */}
+                <div className="pt-1.5 border-t border-slate-200/70 dark:border-slate-800 space-y-0.5">
+                  <span className="text-[10.5px] text-slate-500 dark:text-slate-400 block">
+                    Setup #1 — "5034" Trend Dönüş Kesişimi
+                  </span>
+                  <span
+                    className={`font-semibold ${
+                      techAnalysis.cci50Strategy.setup5034.state === 'buy_5034'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : techAnalysis.cci50Strategy.setup5034.state === 'sell_5034'
+                          ? 'text-red-600 dark:text-red-400'
+                          : 'text-slate-600 dark:text-slate-400 font-normal'
+                    }`}
+                  >
+                    {techAnalysis.cci50Strategy.setup5034.label}
+                  </span>
+                  {techAnalysis.cci50Strategy.setup5034.confirmationNote && (
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                      {techAnalysis.cci50Strategy.setup5034.confirmationNote}
+                    </div>
+                  )}
+                </div>
+
+                {/* Setup 2: 5034z Pullback */}
+                <div className="pt-1.5 border-t border-slate-200/70 dark:border-slate-800 space-y-0.5">
+                  <span className="text-[10.5px] text-slate-500 dark:text-slate-400 block">
+                    Setup #2 — "5034z" İlk Düzeltme Girişi (34 EMA Testi + ZLR)
+                  </span>
+                  <span
+                    className={`font-semibold ${
+                      techAnalysis.cci50Strategy.setup5034z.state === 'buy_5034z'
+                        ? 'text-cyan-600 dark:text-cyan-400'
+                        : techAnalysis.cci50Strategy.setup5034z.state === 'sell_5034z'
+                          ? 'text-rose-600 dark:text-rose-400'
+                          : 'text-slate-600 dark:text-slate-400 font-normal'
+                    }`}
+                  >
+                    {techAnalysis.cci50Strategy.setup5034z.label}
+                  </span>
+                  {techAnalysis.cci50Strategy.setup5034z.confirmationNote && (
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                      {techAnalysis.cci50Strategy.setup5034z.confirmationNote}
+                    </div>
+                  )}
+                </div>
+
+                {/* Setup 3: 50140 Strong Trend Re-entry */}
+                <div className="pt-1.5 border-t border-slate-200/70 dark:border-slate-800 space-y-0.5">
+                  <span className="text-[10.5px] text-slate-500 dark:text-slate-400 block">
+                    Setup #3 — "50140" Güçlü Trend Devam (V-Pullback Sonrası 14 CCI Sıfır Kırılımı)
+                  </span>
+                  <span
+                    className={`font-semibold ${
+                      techAnalysis.cci50Strategy.setup50140.state === 'buy_50140'
+                        ? 'text-amber-600 dark:text-amber-400'
+                        : techAnalysis.cci50Strategy.setup50140.state === 'sell_50140'
+                          ? 'text-red-600 dark:text-red-400'
+                          : 'text-slate-600 dark:text-slate-400 font-normal'
+                    }`}
+                  >
+                    {techAnalysis.cci50Strategy.setup50140.label}
+                  </span>
+                  {techAnalysis.cci50Strategy.setup50140.confirmationNote && (
+                    <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                      {techAnalysis.cci50Strategy.setup50140.confirmationNote}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 00F. Courtney Capital — Slow Stoch (13,8,4) & CCI (20) Dual Sistem */}
+            <div className="space-y-1.5 pb-3 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-semibold text-slate-900 dark:text-slate-100">
+                  Courtney Capital Dual Sistem (13,8,4 + CCI 20)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onToggleOverlay('showCourtney')}
+                  className={`px-2 py-0.5 text-[10.5px] font-mono font-semibold rounded border transition-colors whitespace-nowrap shrink-0 ${
+                    settings.showCourtney
+                      ? 'bg-teal-500/15 border-teal-500/40 text-teal-700 dark:text-teal-300'
+                      : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {settings.showCourtney ? '✓ Courtney Aktif' : 'Courtney Göster'}
+                </button>
+              </div>
+
+              <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 space-y-2">
+                {/* Dual Confluence Signal */}
+                <div>
+                  <span className="text-[10.5px] text-slate-500 dark:text-slate-400 block">
+                    Neville Chester Dual Sinyal Durumu
+                  </span>
+                  <span
+                    className={`font-semibold ${
+                      techAnalysis.courtneyStrategy.dualConfluenceSignal.state === 'buy_confluence'
+                        ? 'text-teal-600 dark:text-teal-400'
+                        : techAnalysis.courtneyStrategy.dualConfluenceSignal.state === 'sell_confluence'
+                          ? 'text-rose-600 dark:text-rose-400'
+                          : 'text-slate-600 dark:text-slate-300'
+                    }`}
+                  >
+                    {techAnalysis.courtneyStrategy.dualConfluenceSignal.label}
+                  </span>
+                  {techAnalysis.courtneyStrategy.dualConfluenceSignal.note && (
+                    <div className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      {techAnalysis.courtneyStrategy.dualConfluenceSignal.note}
+                    </div>
+                  )}
+                </div>
+
+                {/* Live Oscillators Readout */}
+                <div className="grid grid-cols-2 gap-2 pt-1.5 border-t border-slate-200/70 dark:border-slate-800 font-mono text-[11px]">
+                  <div>
+                    <span className="text-slate-500 block">Stoch (13,8,4) %K / %D</span>
+                    <span className="font-semibold text-slate-900 dark:text-slate-100">
+                      {techAnalysis.courtneyStrategy.stoch13_8_4.slowK != null
+                        ? techAnalysis.courtneyStrategy.stoch13_8_4.slowK.toFixed(1)
+                        : '—'}{' '}
+                      / {techAnalysis.courtneyStrategy.stoch13_8_4.slowD != null
+                        ? techAnalysis.courtneyStrategy.stoch13_8_4.slowD.toFixed(1)
+                        : '—'}
+                    </span>
+                    <span className="block text-[10px] text-teal-600 dark:text-teal-400 font-sans">
+                      {techAnalysis.courtneyStrategy.stoch13_8_4.label}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block">CCI (20) Değeri</span>
+                    <span
+                      className={`font-semibold ${
+                        (techAnalysis.courtneyStrategy.cci20Value ?? 0) >= 100
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : (techAnalysis.courtneyStrategy.cci20Value ?? 0) <= -100
+                            ? 'text-rose-600 dark:text-rose-400'
+                            : 'text-slate-900 dark:text-slate-100'
+                      }`}
+                    >
+                      {techAnalysis.courtneyStrategy.cci20Value != null
+                        ? techAnalysis.courtneyStrategy.cci20Value.toFixed(1)
+                        : '—'}
+                    </span>
+                    <span className="block text-[10px] text-slate-500 font-sans">
+                      {techAnalysis.courtneyStrategy.cci20State === 'overbought'
+                        ? 'Aşırı Alım (+100 Üzeri)'
+                        : techAnalysis.courtneyStrategy.cci20State === 'oversold'
+                          ? 'Aşırı Satım (-100 Altı)'
+                          : techAnalysis.courtneyStrategy.cci20State === 'surge_bull'
+                            ? 'Boğa Trend Eşzamanlı'
+                            : techAnalysis.courtneyStrategy.cci20State === 'surge_bear'
+                              ? 'Ayı Trend Eşzamanlı'
+                              : 'Normal Denge'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Neville Chester Ignore Overbought Warning */}
+                {techAnalysis.courtneyStrategy.trendingIgnoreOscWarning && (
+                  <div className="pt-1.5 border-t border-slate-200/70 dark:border-slate-800">
+                    <span className="text-[10.5px] font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                      ⚠️ Neville Kuralı (Slayt 15):
+                    </span>
+                    <p className="text-[10px] text-amber-700 dark:text-amber-300 leading-relaxed mt-0.5">
+                      {techAnalysis.courtneyStrategy.trendingIgnoreOscWarning}
+                    </p>
+                  </div>
+                )}
+
+                {/* Divergence Detection */}
+                {techAnalysis.courtneyStrategy.divergence.kind !== 'none' && (
+                  <div className="pt-1.5 border-t border-slate-200/70 dark:border-slate-800">
+                    <span className="text-[10.5px] text-slate-500 dark:text-slate-400 block">
+                      Öncü Uyumsuzluk (Leading Divergence)
+                    </span>
+                    <span
+                      className={`font-semibold ${
+                        techAnalysis.courtneyStrategy.divergence.kind === 'bullish_divergence'
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-rose-600 dark:text-rose-400'
+                      }`}
+                    >
+                      {techAnalysis.courtneyStrategy.divergence.label}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 

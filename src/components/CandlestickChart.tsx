@@ -802,6 +802,222 @@ export function CandlestickChart({
       }
     }
 
+    // 3D. LAYER: The 50 CCI & 34 EMA Stratejisi (Buzz / Traders Haven)
+    if (settings.showCCI50 && techAnalysis.cci50Strategy) {
+      const cs = techAnalysis.cci50Strategy;
+      const sStart = Math.max(0, startIdx - 1);
+      const sEnd = Math.min(candles.length - 1, endIdx + 1);
+
+      // 1. 204 EMA (HTF 6:1 34 EMA Baseline)
+      if (techAnalysis.ema204.length > 0) {
+        ctx.strokeStyle = '#6366F1';
+        ctx.lineWidth = 1.6;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        let st204 = false;
+        for (let i = sStart; i <= sEnd; i++) {
+          const val = techAnalysis.ema204[i];
+          if (val == null) continue;
+          const x = xForIndex(i);
+          const y = yForPrice(val);
+          if (!st204) {
+            ctx.moveTo(x, y);
+            st204 = true;
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // 2. 34 EMA with Dynamic Segment-by-Segment Slope Coloring (Cyan: Up, Crimson: Down)
+      if (techAnalysis.ema34.length > 0) {
+        ctx.lineWidth = 2.4;
+        for (let i = sStart + 1; i <= sEnd; i++) {
+          const vPrev = techAnalysis.ema34[i - 1];
+          const vCur = techAnalysis.ema34[i];
+          if (vPrev == null || vCur == null) continue;
+          const isUp = vCur >= vPrev;
+          ctx.strokeStyle = isUp ? '#06B6D4' : '#991B1B';
+          ctx.beginPath();
+          ctx.moveTo(xForIndex(i - 1), yForPrice(vPrev));
+          ctx.lineTo(xForIndex(i), yForPrice(vCur));
+          ctx.stroke();
+        }
+      }
+
+      // 3. Top-left Status readout
+      const activeIdx =
+        hoveredIndex ?? selectedCandleIndex ?? (candles.length > 0 ? candles.length - 1 : 0);
+      const curCci50 = techAnalysis.cci50[activeIdx] ?? cs.cci50Value;
+      const curCci14 = techAnalysis.cci14[activeIdx] ?? cs.cci14Value;
+      const labelY = topPad + 12;
+
+      ctx.font = '700 9.5px "JetBrains Mono", monospace';
+      ctx.textAlign = 'left';
+      ctx.fillStyle = cs.isChopZone ? '#F59E0B' : (curCci50 ?? 0) >= 0 ? '#10B981' : '#EF4444';
+      const cci50Text = curCci50 != null ? `${curCci50 > 0 ? '+' : ''}${curCci50.toFixed(1)}` : 'N/A';
+      const cci14Text = curCci14 != null ? `${curCci14 > 0 ? '+' : ''}${curCci14.toFixed(1)}` : 'N/A';
+      ctx.fillText(
+        cs.isChopZone
+          ? `34 EMA & 50 CCI · ⚠️ CHOP BÖLGESİ (50 CCI: ${cci50Text} · 14 CCI: ${cci14Text})`
+          : `34 EMA (Cyan/Kahve) & 50 CCI [50: ${cci50Text} · 14: ${cci14Text}] · 204 EMA (HTF)`,
+        10,
+        labelY
+      );
+
+      // Setup 1: 5034 Reversal Marker
+      if (
+        cs.setup5034.state !== 'none' &&
+        cs.setup5034.barIndex != null &&
+        cs.setup5034.price != null &&
+        cs.setup5034.barIndex >= startIdx &&
+        cs.setup5034.barIndex <= endIdx
+      ) {
+        const sx = xForIndex(cs.setup5034.barIndex);
+        const sy = yForPrice(cs.setup5034.price);
+        const isBuy = cs.setup5034.state === 'buy_5034';
+        const col = isBuy ? '#10B981' : '#EF4444';
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        ctx.font = '700 9.5px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = col;
+        ctx.fillText(
+          isBuy ? '5034 DÖNÜŞ AL' : '5034 DÖNÜŞ SAT',
+          sx,
+          isBuy ? Math.max(topPad + 14, sy - 10) : Math.min(mainPaneHeight - 8, sy + 16)
+        );
+      }
+
+      // Setup 2: 5034z Pullback (ZLR Hook) Marker
+      if (
+        cs.setup5034z.state !== 'none' &&
+        cs.setup5034z.barIndex != null &&
+        cs.setup5034z.price != null &&
+        cs.setup5034z.barIndex >= startIdx &&
+        cs.setup5034z.barIndex <= endIdx
+      ) {
+        const zx = xForIndex(cs.setup5034z.barIndex);
+        const zy = yForPrice(cs.setup5034z.price);
+        const isBuy = cs.setup5034z.state === 'buy_5034z';
+        const col = '#06B6D4';
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        ctx.arc(zx, zy, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.font = '700 9.5px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = col;
+        ctx.fillText(
+          isBuy ? '5034z ZLR AL' : '5034z ZLR SAT',
+          zx,
+          isBuy ? Math.min(mainPaneHeight - 8, zy + 15) : Math.max(topPad + 14, zy - 10)
+        );
+      }
+
+      // Setup 3: 50140 Strong Trend Re-entry Marker
+      if (
+        cs.setup50140.state !== 'none' &&
+        cs.setup50140.barIndex != null &&
+        cs.setup50140.price != null &&
+        cs.setup50140.barIndex >= startIdx &&
+        cs.setup50140.barIndex <= endIdx
+      ) {
+        const fx = xForIndex(cs.setup50140.barIndex);
+        const fy = yForPrice(cs.setup50140.price);
+        const isBuy = cs.setup50140.state === 'buy_50140';
+        const col = '#F59E0B';
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        ctx.arc(fx, fy, 4.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.font = '700 9.5px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = col;
+        ctx.fillText(
+          isBuy ? '50140 DEVAM AL' : '50140 DEVAM SAT',
+          fx,
+          isBuy ? Math.max(topPad + 14, fy - 10) : Math.min(mainPaneHeight - 8, fy + 16)
+        );
+      }
+    }
+
+    // 3E. LAYER: Courtney Capital Dual Osilatör Sistemi (Slow Stoch 13,8,4 & CCI 20)
+    if (settings.showCourtney && techAnalysis.courtneyStrategy) {
+      const court = techAnalysis.courtneyStrategy;
+
+      // 1. Dual Confluence Signal Marker (Slayt 18–30)
+      if (
+        court.dualConfluenceSignal.state !== 'none' &&
+        court.dualConfluenceSignal.barIndex != null &&
+        court.dualConfluenceSignal.price != null &&
+        court.dualConfluenceSignal.barIndex >= startIdx &&
+        court.dualConfluenceSignal.barIndex <= endIdx
+      ) {
+        const cx = xForIndex(court.dualConfluenceSignal.barIndex);
+        const cy = yForPrice(court.dualConfluenceSignal.price);
+        const isBuy = court.dualConfluenceSignal.state === 'buy_confluence';
+        const col = isBuy ? '#14B8A6' : '#F43F5E';
+
+        // Outer halo
+        ctx.fillStyle = isBuy ? 'rgba(20, 184, 166, 0.25)' : 'rgba(244, 63, 94, 0.25)';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 9, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Inner solid dot
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 5.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1.4;
+        ctx.stroke();
+
+        ctx.font = '700 9.5px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = col;
+        ctx.fillText(
+          isBuy ? 'COURTNEY AL (13,8,4 + CCI20)' : 'COURTNEY SAT (13,8,4 + CCI20)',
+          cx,
+          isBuy ? Math.max(topPad + 14, cy - 12) : Math.min(mainPaneHeight - 8, cy + 18)
+        );
+      }
+
+      // 2. Divergence Banner (Boğa veya Ayı Uyumsuzluğu)
+      if (court.divergence.kind !== 'none') {
+        const isBullDiv = court.divergence.kind === 'bullish_divergence';
+        const divCol = isBullDiv ? '#10B981' : '#EF4444';
+        const badgeX = 16;
+        const badgeY = topPad + 44;
+
+        ctx.font = '600 10px "Plus Jakarta Sans", sans-serif';
+        ctx.fillStyle = isBullDiv ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)';
+        ctx.fillRect(badgeX, badgeY - 11, 230, 18);
+        ctx.strokeStyle = divCol;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(badgeX, badgeY - 11, 230, 18);
+
+        ctx.fillStyle = divCol;
+        ctx.textAlign = 'left';
+        ctx.fillText(
+          isBullDiv ? '▲ Courtney Boğa Divergence (Stoch/CCI)' : '▼ Courtney Ayı Divergence (Stoch/CCI)',
+          badgeX + 6,
+          badgeY + 2
+        );
+      }
+    }
+
     // 4. LAYER: Trend Çizgisi ve Paralel Trend Kanalı
     if (settings.showTrendChannel && techAnalysis.trendChannel) {
       const tc = techAnalysis.trendChannel;

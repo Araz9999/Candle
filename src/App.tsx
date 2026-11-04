@@ -656,6 +656,8 @@ export default function App() {
                   label: `Opt. BB (N*=${techAnalysis.bollingerOptimization.optimalWindowN})`,
                 },
                 { key: 'showKeltner', label: 'Keltner (20,2 ATR)' },
+                { key: 'showCCI50', label: '34 EMA & 50 CCI' },
+                { key: 'showCourtney', label: 'Courtney (13,8,4 + CCI)' },
                 { key: 'showMACD', label: 'MACD (12,26,9)' },
                 { key: 'showMorrisFilter', label: 'Morris (%D/RSI)' },
               ] as Array<{ key: ChartOverlayKey; label: string }>

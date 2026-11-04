@@ -57,6 +57,8 @@ interface ScannedRow {
   bollingerStrategy: TechnicalStructureAnalysis['bollingerStrategy'];
   bollingerOptimization: TechnicalStructureAnalysis['bollingerOptimization'];
   keltnerStrategy: TechnicalStructureAnalysis['keltnerStrategy'];
+  cci50Strategy: TechnicalStructureAnalysis['cci50Strategy'];
+  courtneyStrategy: TechnicalStructureAnalysis['courtneyStrategy'];
   structureSummary: string;
 }
 
@@ -68,6 +70,8 @@ export function MarketScannerView({ settings, onOpenInstrument }: MarketScannerV
   const [morrisOnly, setMorrisOnly] = useState<boolean>(false);
   const [bbStrategyOnly, setBbStrategyOnly] = useState<boolean>(false);
   const [keltnerOnly, setKeltnerOnly] = useState<boolean>(false);
+  const [cciOnly, setCciOnly] = useState<boolean>(false);
+  const [courtneyOnly, setCourtneyOnly] = useState<boolean>(false);
   const [hideChoppy, setHideChoppy] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -144,6 +148,8 @@ export function MarketScannerView({ settings, onOpenInstrument }: MarketScannerV
           bollingerStrategy: tech.bollingerStrategy,
           bollingerOptimization: tech.bollingerOptimization,
           keltnerStrategy: tech.keltnerStrategy,
+          cci50Strategy: tech.cci50Strategy,
+          courtneyStrategy: tech.courtneyStrategy,
           structureSummary,
         };
       })
@@ -184,6 +190,23 @@ export function MarketScannerView({ settings, onOpenInstrument }: MarketScannerV
           ks.ttmSqueezeActive;
         if (!hasKeltnerSetup) return false;
       }
+      if (cciOnly) {
+        const cs = r.cci50Strategy;
+        const hasCciSetup =
+          cs.setup5034.state !== 'none' ||
+          cs.setup5034z.state !== 'none' ||
+          cs.setup50140.state !== 'none' ||
+          cs.isChopZone;
+        if (!hasCciSetup) return false;
+      }
+      if (courtneyOnly) {
+        const ct = r.courtneyStrategy;
+        const hasCourtneySetup =
+          ct.dualConfluenceSignal.state !== 'none' ||
+          ct.divergence.kind !== 'none' ||
+          ct.trendingIgnoreOscWarning !== null;
+        if (!hasCourtneySetup) return false;
+      }
       if (directionFilter !== 'all') {
         if (!r.latestPattern || r.latestPattern.direction !== directionFilter) return false;
       }
@@ -197,7 +220,8 @@ export function MarketScannerView({ settings, onOpenInstrument }: MarketScannerV
           r.structureSummary.toLowerCase().includes(q) ||
           r.bollingerStrategy.bbmaSignal.label.toLowerCase().includes(q) ||
           r.bollingerStrategy.volatilityLabel.toLowerCase().includes(q) ||
-          r.keltnerStrategy.channelLabel.toLowerCase().includes(q);
+          r.keltnerStrategy.channelLabel.toLowerCase().includes(q) ||
+          r.cci50Strategy.trendLabel.toLowerCase().includes(q);
         if (!matchSymbol && !matchName && !matchPat) return false;
       }
       return true;
@@ -210,6 +234,8 @@ export function MarketScannerView({ settings, onOpenInstrument }: MarketScannerV
     morrisOnly,
     bbStrategyOnly,
     keltnerOnly,
+    cciOnly,
+    courtneyOnly,
     hideChoppy,
     searchQuery,
   ]);
@@ -353,6 +379,30 @@ export function MarketScannerView({ settings, onOpenInstrument }: MarketScannerV
             }`}
           >
             {keltnerOnly ? '✓ ' : ''}Keltner 3-Yöntem
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCciOnly((v) => !v)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors whitespace-nowrap shrink-0 ${
+              cciOnly
+                ? 'bg-cyan-600/10 border-cyan-500/40 text-cyan-700 dark:text-cyan-300 font-semibold'
+                : 'bg-white dark:bg-[#0F172A] border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+            }`}
+          >
+            {cciOnly ? '✓ ' : ''}50 CCI (5034 / 50140)
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCourtneyOnly((v) => !v)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors whitespace-nowrap shrink-0 ${
+              courtneyOnly
+                ? 'bg-teal-600/10 border-teal-500/40 text-teal-700 dark:text-teal-300 font-semibold'
+                : 'bg-white dark:bg-[#0F172A] border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+            }`}
+          >
+            {courtneyOnly ? '✓ ' : ''}Courtney (13,8,4 + CCI20)
           </button>
 
           <button
@@ -601,6 +651,52 @@ export function MarketScannerView({ settings, onOpenInstrument }: MarketScannerV
                               {row.keltnerStrategy.ttmSqueezeActive && (
                                 <span className="text-amber-600 dark:text-amber-400 font-semibold">
                                   {' · '}TTM Squeeze
+                                </span>
+                              )}
+                              {row.cci50Strategy.setup5034.state !== 'none' && (
+                                <span className="text-cyan-600 dark:text-cyan-400 font-semibold">
+                                  {' · '}
+                                  {row.cci50Strategy.setup5034.state === 'buy_5034'
+                                    ? '5034 Dönüş AL'
+                                    : '5034 Dönüş SAT'}
+                                </span>
+                              )}
+                              {row.cci50Strategy.setup5034z.state !== 'none' && (
+                                <span className="text-cyan-600 dark:text-cyan-400 font-semibold">
+                                  {' · '}
+                                  {row.cci50Strategy.setup5034z.state === 'buy_5034z'
+                                    ? '5034z ZLR AL'
+                                    : '5034z ZLR SAT'}
+                                </span>
+                              )}
+                              {row.cci50Strategy.setup50140.state !== 'none' && (
+                                <span className="text-amber-600 dark:text-amber-400 font-semibold">
+                                  {' · '}
+                                  {row.cci50Strategy.setup50140.state === 'buy_50140'
+                                    ? '50140 Devam AL'
+                                    : '50140 Devam SAT'}
+                                </span>
+                              )}
+                              {row.cci50Strategy.isChopZone && (
+                                <span className="text-amber-600 dark:text-amber-400 font-semibold">
+                                  {' · '}Chop
+                                </span>
+                              )}
+                              {row.courtneyStrategy.dualConfluenceSignal.state !== 'none' && (
+                                <span className="text-teal-600 dark:text-teal-400 font-semibold">
+                                  {' · '}
+                                  {row.courtneyStrategy.dualConfluenceSignal.state ===
+                                  'buy_confluence'
+                                    ? 'Courtney AL'
+                                    : 'Courtney SAT'}
+                                </span>
+                              )}
+                              {row.courtneyStrategy.divergence.kind !== 'none' && (
+                                <span className="text-teal-500 font-semibold">
+                                  {' · '}
+                                  {row.courtneyStrategy.divergence.kind === 'bullish_divergence'
+                                    ? 'Courtney Boğa Div'
+                                    : 'Courtney Ayı Div'}
                                 </span>
                               )}
                               <span className="font-mono text-slate-400 dark:text-slate-500">

@@ -73,6 +73,24 @@ const DOCUMENTS: ReferenceDoc[] = [
       'Casey Stubbs (Trading Strategy Guides) Keltner Kanalı rehberi: 20 EMA ± 2 ATR(14) formülü, Bollinger ile farkı, ADX(>20) Kırılım Sistemi, 2-Periyot RSI(10/90) Yatay Piyasa Sistemi ve Güçlü Trend 20 EMA Pullback + StochRSI Sistemi.',
     url: 'https://tradingstrategyguides.com/keltner-trading-strategy/',
   },
+  {
+    id: 'cci_50_trading',
+    kind: 'pdf',
+    title: '08. The 50 CCI Trading (38s)',
+    description:
+      'Buzz / Traders Haven: 34 EMA (Cyan/Kahve) ve 50 CCI Sistemi, 50 CCI Sıfır Hattı = Düz 50 EMA, 14 EMA = 14 CCI Sıfır Çizgisi, 204 EMA (6:1 Üst Zaman Dilimi 34 EMA Eşdeğeri), Setup 1 (5034 Dönüş), Setup 2 (5034z İlk Düzeltme / ZLR) ve Setup 3 (50140 Güçlü Trend Devam).',
+    url: '/assets/aistudio/anintroductiontosuccessfultradingusingthe50cci_6841fff8.pdf',
+    downloadName: 'An_Introduction_To_Successful_Trading_Using_The_50_CCI.pdf',
+  },
+  {
+    id: 'courtney_capital_strategy',
+    kind: 'pdf',
+    title: '09. Courtney Capital (31s)',
+    description:
+      'Courtney Capital Private Wealth (Neville Chester): "My Favourite Trading Strategy" — Slow Stochastic (13, 8, 4) ve Commodity Channel Index (CCI 20) dual osilatör sistemi. George Lane hız yasası, 0.015 katsayılı CCI formülü, eşzamanlı (coincidental) trend kopuşları vs öncü uyumsuzluklar (divergence), Neville Chester\'ın "Trendde Aşırı Alım/Satımı Yok Say (Ignore)" kuralı ve kusursuz çift teyitli tetik çizgisi giriş modeli.',
+    url: '/assets/aistudio/Neville-Friday-8-Feb-2013_eb6c6fc0.pdf',
+    downloadName: 'Courtney_Capital_My_Favourite_Trading_Strategy.pdf',
+  },
 ];
 
 export function PdfReferenceView() {

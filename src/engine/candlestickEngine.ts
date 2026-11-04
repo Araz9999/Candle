@@ -2011,6 +2011,8 @@ export function createDefaultPatternSettings(): PatternSettings {
     showBollinger: false,
     useAdaptiveBollinger: false,
     showKeltner: false,
+    showCCI50: false,
+    showCourtney: false,
     showMACD: true,
     showMorrisFilter: false,
   };

@@ -3,6 +3,8 @@ import type {
   BollingerPoint,
   BollingerStrategySummary,
   Candle,
+  Cci50StrategySummary,
+  CourtneyStrategySummary,
   DetectedPattern,
   EmpiricalBollingerOptimization,
   FibonacciGrid,
@@ -2258,6 +2260,624 @@ export function computeKeltnerStrategy(
 }
 
 /**
+ * Commodity Channel Index (CCI) Hesaplaması
+ * TP = (High + Low + Close) / 3
+ * SMA_TP = SMA(TP, period)
+ * Mean Deviation = Mean(|TP_i - SMA_TP|)
+ * CCI = (TP - SMA_TP) / (0.015 * MeanDev)
+ */
+export function computeCCI(candles: Candle[], period = 50): Array<number | null> {
+  const result: Array<number | null> = candles.map(() => null);
+  if (candles.length < period) return result;
+
+  const tps = candles.map((c) => (c.high + c.low + c.close) / 3);
+
+  for (let i = period - 1; i < candles.length; i++) {
+    let sumTP = 0;
+    for (let k = i - period + 1; k <= i; k++) {
+      sumTP += tps[k];
+    }
+    const smaTP = sumTP / period;
+
+    let sumDev = 0;
+    for (let k = i - period + 1; k <= i; k++) {
+      sumDev += Math.abs(tps[k] - smaTP);
+    }
+    const meanDev = sumDev / period;
+
+    if (meanDev < 1e-9) {
+      result[i] = 0;
+    } else {
+      const cci = (tps[i] - smaTP) / (0.015 * meanDev);
+      result[i] = Number(cci.toFixed(2));
+    }
+  }
+
+  return result;
+}
+
+/**
+ * The 50 CCI & 34 EMA Stratejisi (Buzz / Traders Haven)
+ * 1. 34 EMA Eğim ve Trend Yönü (Cyan: Yükseliş, Dark Brown: Düşüş)
+ * 2. 50 CCI Sıfır Çizgisi = Düz 50 EMA Kapanışı
+ * 3. 14 EMA Kesişimi = 14 CCI Sıfır Çizgisi
+ * 4. 204 EMA = 6:1 Üst Zaman Dilimi 34 EMA Dengesi
+ * 5. Chop Zone: 14 CCI ±100 arasında sıkışıp 14 EMA düzleştiğinde
+ * 6. Setuplar:
+ *    - 5034 Dönüş Kesişimi (Fiyat 34 EMA + 50 CCI Sıfır Çizgisini Aynı Anda Kırıp Kapatır)
+ *    - 5034z İlk Geri Çekilme (5034 sonrası 34 EMA testi + 14 CCI Sıfır Çizgisi Reddi/ZLR)
+ *    - 50140 Güçlü Trend Devam (50 CCI trend bölgesindeyken derin V-düzeltme sonrası 14 CCI Sıfır Çizgisini geri kırar)
+ */
+export function computeCci50Strategy(
+  candles: Candle[],
+  cci14: Array<number | null>,
+  cci50: Array<number | null>,
+  ema14: Array<number | null>,
+  ema34: Array<number | null>,
+  ema204: Array<number | null>
+): Cci50StrategySummary {
+  const defaultSummary: Cci50StrategySummary = {
+    trendState: 'neutral',
+    trendLabel: 'Nötr Denge (Yeterli Bar Yok)',
+    ema34Slope: 'flat',
+    cci50Value: null,
+    cci14Value: null,
+    isChopZone: false,
+    setup5034: { state: 'none', label: 'Yok', barIndex: null, price: null },
+    setup5034z: { state: 'none', label: 'Yok', barIndex: null, price: null },
+    setup50140: { state: 'none', label: 'Yok', barIndex: null, price: null },
+  };
+
+  if (candles.length < 50) return defaultSummary;
+
+  const n = candles.length - 1;
+  const curC = candles[n];
+  const curCci50 = cci50[n];
+  const curCci14 = cci14[n];
+  const curEma34 = ema34[n];
+  const prevEma34 = ema34[n - 1];
+  const curEma14 = ema14[n];
+  const prevEma14 = ema14[n - 1];
+  const curEma204 = ema204[n];
+
+  // 1. 34 EMA Eğimi (Cyan: Yukarı, Kahverengi/Kırmızı: Aşağı)
+  let ema34Slope: 'up' | 'down' | 'flat' = 'flat';
+  if (curEma34 != null && prevEma34 != null) {
+    const diff = curEma34 - prevEma34;
+    const threshold = curEma34 * 0.0001;
+    if (diff > threshold) ema34Slope = 'up';
+    else if (diff < -threshold) ema34Slope = 'down';
+  }
+
+  // 2. Chop Zone Tespiti: 14 CCI ±100 bandı içine sıkışmış ve 14 EMA neredeyse yatay
+  let isChopZone = false;
+  if (curCci14 != null && Math.abs(curCci14) <= 90) {
+    let allInside = true;
+    for (let k = Math.max(0, n - 3); k <= n; k++) {
+      const v = cci14[k];
+      if (v == null || Math.abs(v) > 105) {
+        allInside = false;
+        break;
+      }
+    }
+    if (allInside && curEma14 != null && prevEma14 != null) {
+      const slope14 = Math.abs(curEma14 - prevEma14) / curEma14;
+      if (slope14 < 0.0004) {
+        isChopZone = true;
+      }
+    }
+  }
+
+  // 3. Genel Trend Durumu
+  let trendState: 'bull_trend' | 'bear_trend' | 'chop' | 'neutral' = 'neutral';
+  let trendLabel = 'Nötr / Kararsız Bölge';
+
+  if (isChopZone) {
+    trendState = 'chop';
+    trendLabel = 'Testere / Chop Bölgesi (14 CCI ±100 Arasında · Kırılımlardan Kaçının)';
+  } else if (curCci50 != null && curEma34 != null) {
+    if (curCci50 > 15 && curC.close > curEma34 && ema34Slope === 'up') {
+      trendState = 'bull_trend';
+      trendLabel =
+        curEma204 != null && curC.close > curEma204
+          ? 'Güçlü Boğa Trendi (Fiyat > 34 EMA & 204 EMA · 50 CCI > 0)'
+          : 'Yükseliş Trendi (Fiyat > 34 EMA · 50 CCI Yeşil Histogram)';
+    } else if (curCci50 < -15 && curC.close < curEma34 && ema34Slope === 'down') {
+      trendState = 'bear_trend';
+      trendLabel =
+        curEma204 != null && curC.close < curEma204
+          ? 'Güçlü Ayı Trendi (Fiyat < 34 EMA & 204 EMA · 50 CCI < 0)'
+          : 'Düşüş Trendi (Fiyat < 34 EMA · 50 CCI Kırmızı Histogram)';
+    } else if (curCci50 > 0) {
+      trendState = 'bull_trend';
+      trendLabel = 'Pozitif Bölge (50 CCI > 0 · Sıfır Hattı Üzeri)';
+    } else if (curCci50 < 0) {
+      trendState = 'bear_trend';
+      trendLabel = 'Negatif Bölge (50 CCI < 0 · Sıfır Hattı Altı)';
+    }
+  }
+
+  // 4. Setuplar:
+  // Setup 1: 5034 Reversal (Son 1-5 bar içinde hem fiyatın 34 EMA'yı hem de 50 CCI'ın sıfır çizgisini kırması)
+  let setup5034: Cci50StrategySummary['setup5034'] = {
+    state: 'none',
+    label: 'Aktif Sinyal Yok',
+    barIndex: null,
+    price: null,
+  };
+
+  for (let k = n; k >= Math.max(1, n - 6); k--) {
+    const cNow = candles[k];
+    const cPrev = candles[k - 1];
+    const eNow = ema34[k];
+    const ePrev = ema34[k - 1];
+    const c50Now = cci50[k];
+    const c50Prev = cci50[k - 1];
+
+    if (eNow != null && ePrev != null && c50Now != null && c50Prev != null) {
+      const bullPriceCross = cPrev.close <= ePrev && cNow.close > eNow;
+      const bullCciCross = (c50Prev <= 5 && c50Now > 0) || (c50Prev <= 0 && c50Now >= 0);
+      if (bullPriceCross && bullCciCross) {
+        const barsAgo = n - k;
+        setup5034 = {
+          state: 'buy_5034',
+          label: barsAgo === 0 ? '5034 Alış Dönüş Kesişimi (Bar Kapanışı)' : `5034 Alış Dönüşü (${barsAgo} bar önce)`,
+          barIndex: k,
+          price: cNow.close,
+          confirmationNote: 'Fiyat 34 EMA üzerinde kapandı + 50 CCI Sıfır Çizgisini yukarı kırdı',
+        };
+        break;
+      }
+
+      const bearPriceCross = cPrev.close >= ePrev && cNow.close < eNow;
+      const bearCciCross = (c50Prev >= -5 && c50Now < 0) || (c50Prev >= 0 && c50Now <= 0);
+      if (bearPriceCross && bearCciCross) {
+        const barsAgo = n - k;
+        setup5034 = {
+          state: 'sell_5034',
+          label: barsAgo === 0 ? '5034 Satış Dönüş Kesişimi (Bar Kapanışı)' : `5034 Satış Dönüşü (${barsAgo} bar önce)`,
+          barIndex: k,
+          price: cNow.close,
+          confirmationNote: 'Fiyat 34 EMA altında kapandı + 50 CCI Sıfır Çizgisini aşağı kırdı',
+        };
+        break;
+      }
+    }
+  }
+
+  // Setup 2: 5034z (İlk Geri Çekilme / ZLR)
+  let setup5034z: Cci50StrategySummary['setup5034z'] = {
+    state: 'none',
+    label: 'Aktif Sinyal Yok',
+    barIndex: null,
+    price: null,
+  };
+
+  for (let k = n; k >= Math.max(2, n - 8); k--) {
+    const c14Now = cci14[k];
+    const c14Prev = cci14[k - 1];
+    const c14Prev2 = cci14[k - 2];
+    const c50K = cci50[k];
+    const e34K = ema34[k];
+    const cK = candles[k];
+
+    if (c14Now != null && c14Prev != null && c14Prev2 != null && c50K != null && e34K != null) {
+      const bullZlrHook = c14Prev2 > c14Prev && c14Now > c14Prev && c14Prev >= -45 && c14Prev <= 40;
+      const nearEma34Bull = cK.low <= e34K * 1.006 && cK.close >= e34K * 0.994;
+      if (c50K > 15 && bullZlrHook && nearEma34Bull) {
+        const barsAgo = n - k;
+        setup5034z = {
+          state: 'buy_5034z',
+          label: barsAgo === 0 ? '5034z İlk Düzeltme Alışı (ZLR Kancası)' : `5034z Alış (${barsAgo} bar önce)`,
+          barIndex: k,
+          price: cK.close,
+          confirmationNote: '34 EMA Denge Testi + 14 CCI Sıfır Çizgisinden ZLR Kancasıyla Döndü',
+        };
+        break;
+      }
+
+      const bearZlrHook = c14Prev2 < c14Prev && c14Now < c14Prev && c14Prev <= 45 && c14Prev >= -40;
+      const nearEma34Bear = cK.high >= e34K * 0.994 && cK.close <= e34K * 1.006;
+      if (c50K < -15 && bearZlrHook && nearEma34Bear) {
+        const barsAgo = n - k;
+        setup5034z = {
+          state: 'sell_5034z',
+          label: barsAgo === 0 ? '5034z İlk Düzeltme Satışı (ZLR Kancası)' : `5034z Satış (${barsAgo} bar önce)`,
+          barIndex: k,
+          price: cK.close,
+          confirmationNote: '34 EMA Denge Testi + 14 CCI Sıfır Çizgisinden ZLR Kancasıyla Aşağı Döndü',
+        };
+        break;
+      }
+    }
+  }
+
+  // Setup 3: 50140 (Güçlü Trend Yeniden Giriş / V-Geri Çekilme)
+  let setup50140: Cci50StrategySummary['setup50140'] = {
+    state: 'none',
+    label: 'Aktif Sinyal Yok',
+    barIndex: null,
+    price: null,
+  };
+
+  for (let k = n; k >= Math.max(3, n - 8); k--) {
+    const c14Now = cci14[k];
+    const c14Prev = cci14[k - 1];
+    const c50K = cci50[k];
+    const e14K = ema14[k];
+    const cK = candles[k];
+
+    if (c14Now != null && c14Prev != null && c50K != null && e14K != null) {
+      if (c50K > 30 && c14Prev <= 0 && c14Now > 0 && cK.close >= e14K) {
+        let hadDeepPullback = false;
+        for (let j = Math.max(0, k - 6); j < k; j++) {
+          const cj = cci14[j];
+          if (cj != null && cj <= -60) {
+            hadDeepPullback = true;
+            break;
+          }
+        }
+        if (hadDeepPullback) {
+          const barsAgo = n - k;
+          setup50140 = {
+            state: 'buy_50140',
+            label: barsAgo === 0 ? '50140 Güçlü Trend Alış Girişi (14 CCI Sıfır Kırılımı)' : `50140 Trend Alışı (${barsAgo} bar önce)`,
+            barIndex: k,
+            price: cK.close,
+            confirmationNote: 'Derin V-Düzeltmesi Sonrası 14 CCI Sıfırı Trend Yönünde Tekrar Kırdı + Fiyat > 14 EMA',
+          };
+          break;
+        }
+      }
+
+      if (c50K < -30 && c14Prev >= 0 && c14Now < 0 && cK.close <= e14K) {
+        let hadDeepPullback = false;
+        for (let j = Math.max(0, k - 6); j < k; j++) {
+          const cj = cci14[j];
+          if (cj != null && cj >= 60) {
+            hadDeepPullback = true;
+            break;
+          }
+        }
+        if (hadDeepPullback) {
+          const barsAgo = n - k;
+          setup50140 = {
+            state: 'sell_50140',
+            label: barsAgo === 0 ? '50140 Güçlü Trend Satış Girişi (14 CCI Sıfır Kırılımı)' : `50140 Trend Satışı (${barsAgo} bar önce)`,
+            barIndex: k,
+            price: cK.close,
+            confirmationNote: 'Derin Düzeltme Sonrası 14 CCI Sıfırı Ayı Yönünde Aşağı Kırdı + Fiyat < 14 EMA',
+          };
+          break;
+        }
+      }
+    }
+  }
+
+  return {
+    trendState,
+    trendLabel,
+    ema34Slope,
+    cci50Value: curCci50 != null ? Number(curCci50.toFixed(1)) : null,
+    cci14Value: curCci14 != null ? Number(curCci14.toFixed(1)) : null,
+    isChopZone,
+    setup5034,
+    setup5034z,
+    setup50140,
+  };
+}
+
+/**
+ * Courtney Capital — Slow Stochastic (13, 8, 4) Hesaplaması
+ * George Lane 1950 Momentum Hız Göstergesi (Neville Chester / Courtney Capital)
+ * 1. Fast %K (13 lookback): (Close - LowestLow13) / (HighestHigh13 - LowestLow13) * 100
+ * 2. Slow %K_base: Fast %K'nın 3 periyotluk SMA ile yumuşatılmış hali
+ * 3. Courtney Özel Yumuşatma (Slayt 13 & 18):
+ *    - Slow %K = Slow %K_base'in 8 periyotluk SMA'sı
+ *    - Slow %D = Slow %K'nın 4 periyotluk SMA tetik çizgisi (Trigger Line)
+ */
+export function computeSlowStochastic13_8_4(
+  candles: Candle[]
+): Array<{ slowK: number | null; slowD: number | null }> {
+  const result: Array<{ slowK: number | null; slowD: number | null }> = candles.map(() => ({
+    slowK: null,
+    slowD: null,
+  }));
+  if (candles.length < 28) return result;
+
+  const kPeriod = 13;
+  const fastKValues: Array<number | null> = candles.map(() => null);
+
+  for (let i = kPeriod - 1; i < candles.length; i++) {
+    let lowest = Infinity;
+    let highest = -Infinity;
+    for (let j = i - kPeriod + 1; j <= i; j++) {
+      if (candles[j].low < lowest) lowest = candles[j].low;
+      if (candles[j].high > highest) highest = candles[j].high;
+    }
+    const range = highest - lowest;
+    const fastK = range > 1e-9 ? ((candles[i].close - lowest) / range) * 100 : 50;
+    fastKValues[i] = Math.max(0, Math.min(100, fastK));
+  }
+
+  // Step 2: 3-period SMA smoothing -> slowK_base
+  const slowKBaseValues: Array<number | null> = candles.map(() => null);
+  for (let i = kPeriod + 1; i < candles.length; i++) {
+    let sum = 0;
+    let valid = true;
+    for (let j = i - 2; j <= i; j++) {
+      const v = fastKValues[j];
+      if (v == null) {
+        valid = false;
+        break;
+      }
+      sum += v;
+    }
+    if (valid) {
+      slowKBaseValues[i] = sum / 3;
+    }
+  }
+
+  // Step 3: Neville's 8-period SMA of slowK_base -> final Slow %K
+  const finalSlowK: Array<number | null> = candles.map(() => null);
+  for (let i = kPeriod + 8; i < candles.length; i++) {
+    let sum = 0;
+    let valid = true;
+    for (let j = i - 7; j <= i; j++) {
+      const v = slowKBaseValues[j];
+      if (v == null) {
+        valid = false;
+        break;
+      }
+      sum += v;
+    }
+    if (valid) {
+      finalSlowK[i] = Number((sum / 8).toFixed(2));
+    }
+  }
+
+  // Step 4: 4-period SMA of final Slow %K -> final Slow %D (Trigger Line)
+  for (let i = kPeriod + 11; i < candles.length; i++) {
+    let sum = 0;
+    let valid = true;
+    for (let j = i - 3; j <= i; j++) {
+      const v = finalSlowK[j];
+      if (v == null) {
+        valid = false;
+        break;
+      }
+      sum += v;
+    }
+    if (valid) {
+      const slowD = Number((sum / 4).toFixed(2));
+      result[i] = {
+        slowK: finalSlowK[i],
+        slowD,
+      };
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Courtney Capital — "My Favourite Trading Strategy" Karar Motoru (Neville Chester)
+ * 1. Slow Stochastic (13, 8, 4): Fiyat hızının öncü dönüşü
+ * 2. Commodity Channel Index (20): Lambert döngüsel volatilite ve coincidental aşırı uç
+ * 3. Kural: "Ignore Overbought/Oversold when Trending"
+ * 4. Dual Confluence: Stoch(13,8,4) < 25 + CCI(20) < -100 Aşırı Satım dönüşü
+ * 5. Uyumsuzluk (Divergence) Tespiti: Fiyat yeni dip/tepe yaparken osilatörlerin ıraksaması
+ */
+export function computeCourtneyStrategy(
+  candles: Candle[],
+  stochSlow13_8_4: Array<{ slowK: number | null; slowD: number | null }>,
+  cci20: Array<number | null>,
+  trendChannel: TrendChannelInfo | null,
+  marketRegime: MarketRegimeInfo
+): CourtneyStrategySummary {
+  const defaultSummary: CourtneyStrategySummary = {
+    stoch13_8_4: { slowK: null, slowD: null, state: 'neutral', label: 'Veri Hesaplanıyor' },
+    cci20Value: null,
+    cci20State: 'neutral',
+    dualConfluenceSignal: { state: 'none', label: 'Aktif Sinyal Yok', barIndex: null, price: null },
+    trendingIgnoreOscWarning: false,
+    divergence: { kind: 'none', label: 'Uyumsuzluk Yok' },
+  };
+
+  if (candles.length < 28) return defaultSummary;
+
+  const n = candles.length - 1;
+  const curStoch = stochSlow13_8_4[n];
+  const prevStoch = stochSlow13_8_4[n - 1];
+  const curCci20 = cci20[n];
+  const prevCci20 = cci20[n - 1];
+  const curC = candles[n];
+
+  // 1. Slow Stochastic (13, 8, 4) Durumu
+  let stochState: 'oversold_cross' | 'overbought_cross' | 'neutral' = 'neutral';
+  let stochLabel = 'Denge Bölgesi';
+
+  if (curStoch.slowK != null && curStoch.slowD != null && prevStoch.slowK != null && prevStoch.slowD != null) {
+    if (curStoch.slowK < 20 && curStoch.slowD < 25) {
+      if (prevStoch.slowK <= prevStoch.slowD && curStoch.slowK > curStoch.slowD) {
+        stochState = 'oversold_cross';
+        stochLabel = 'Aşırı Satımda Boğa Kesişimi (%K > %D < 20)';
+      } else {
+        stochLabel = `Aşırı Satım Bölgesinde (${curStoch.slowK.toFixed(1)} < 20)`;
+      }
+    } else if (curStoch.slowK > 80 && curStoch.slowD > 75) {
+      if (prevStoch.slowK >= prevStoch.slowD && curStoch.slowK < curStoch.slowD) {
+        stochState = 'overbought_cross';
+        stochLabel = 'Aşırı Alımda Ayı Kesişimi (%K < %D > 80)';
+      } else {
+        stochLabel = `Aşırı Alım Bölgesinde (${curStoch.slowK.toFixed(1)} > 80)`;
+      }
+    } else if (curStoch.slowK >= curStoch.slowD) {
+      stochLabel = `Pozitif Hız Momentumu (%K=${curStoch.slowK.toFixed(1)})`;
+    } else {
+      stochLabel = `Negatif Hız Momentumu (%K=${curStoch.slowK.toFixed(1)})`;
+    }
+  }
+
+  // 2. CCI (20) Durumu
+  let cci20State: 'overbought' | 'oversold' | 'surge_bull' | 'surge_bear' | 'neutral' = 'neutral';
+  if (curCci20 != null) {
+    if (curCci20 >= 100) {
+      cci20State = prevCci20 != null && prevCci20 < 100 ? 'surge_bull' : 'overbought';
+    } else if (curCci20 <= -100) {
+      cci20State = prevCci20 != null && prevCci20 > -100 ? 'surge_bear' : 'oversold';
+    }
+  }
+
+  // 3. Neville Kuralı: "Ignore Overbought/Oversold when Trending" (Slayt 15)
+  let trendingIgnoreOscWarning = false;
+  if (marketRegime.regime === 'uptrend' && curStoch.slowK != null && curStoch.slowK >= 78) {
+    trendingIgnoreOscWarning = true;
+  } else if (marketRegime.regime === 'downtrend' && curStoch.slowK != null && curStoch.slowK <= 22) {
+    trendingIgnoreOscWarning = true;
+  }
+
+  // 4. Uyumsuzluk Tespiti (Divergence - Slayt 7, 9, 15)
+  let divergence: CourtneyStrategySummary['divergence'] = {
+    kind: 'none',
+    label: 'Uyumsuzluk Yok',
+  };
+
+  // Son 20 barda iki belirgin dip/tepe kıyası
+  if (candles.length >= 25) {
+    const lookback = Math.min(25, candles.length - 2);
+    let minPriceIdx1 = n;
+    let minPriceIdx2 = n;
+    let maxPriceIdx1 = n;
+    let maxPriceIdx2 = n;
+
+    // En düşük 2 dip arayışı
+    const midIdx = n - Math.floor(lookback / 2);
+    for (let k = n - lookback; k < midIdx; k++) {
+      if (candles[k].low < candles[minPriceIdx1].low) minPriceIdx1 = k;
+      if (candles[k].high > candles[maxPriceIdx1].high) maxPriceIdx1 = k;
+    }
+    for (let k = midIdx; k <= n; k++) {
+      if (candles[k].low < candles[minPriceIdx2].low) minPriceIdx2 = k;
+      if (candles[k].high > candles[maxPriceIdx2].high) maxPriceIdx2 = k;
+    }
+
+    // Bullish Divergence: Fiyat daha düşük dip yaptı, ancak CCI(20) veya Stoch(13,8,4) daha yüksek dip yaptı
+    if (
+      candles[minPriceIdx2].low < candles[minPriceIdx1].low * 0.998 &&
+      minPriceIdx2 - minPriceIdx1 >= 4
+    ) {
+      const cciP1 = cci20[minPriceIdx1];
+      const cciP2 = cci20[minPriceIdx2];
+      const stochP1 = stochSlow13_8_4[minPriceIdx1]?.slowK;
+      const stochP2 = stochSlow13_8_4[minPriceIdx2]?.slowK;
+
+      if ((cciP1 != null && cciP2 != null && cciP2 > cciP1 + 8) ||
+          (stochP1 != null && stochP2 != null && stochP2 > stochP1 + 5)) {
+        divergence = {
+          kind: 'bullish_divergence',
+          label: 'Boğa Uyumsuzluğu (Fiyat Yeni Dip, Osilatörler Yükselen Dip)',
+        };
+      }
+    }
+
+    // Bearish Divergence: Fiyat daha yüksek tepe yaptı, ancak osilatörler daha düşük tepe yaptı
+    if (
+      candles[maxPriceIdx2].high > candles[maxPriceIdx1].high * 1.002 &&
+      maxPriceIdx2 - maxPriceIdx1 >= 4 &&
+      divergence.kind === 'none'
+    ) {
+      const cciP1 = cci20[maxPriceIdx1];
+      const cciP2 = cci20[maxPriceIdx2];
+      const stochP1 = stochSlow13_8_4[maxPriceIdx1]?.slowK;
+      const stochP2 = stochSlow13_8_4[maxPriceIdx2]?.slowK;
+
+      if ((cciP1 != null && cciP2 != null && cciP2 < cciP1 - 8) ||
+          (stochP1 != null && stochP2 != null && stochP2 < stochP1 - 5)) {
+        divergence = {
+          kind: 'bearish_divergence',
+          label: 'Ayı Uyumsuzluğu (Fiyat Yeni Tepe, Osilatörler Alçalan Tepe)',
+        };
+      }
+    }
+  }
+
+  // 5. Dual Confluence Signal (Neville'in İmza Kurulumu: Slayt 18–30)
+  // Trend çekilmesinde Slow Stoch (13,8,4) < 25 boğa kesişimi + CCI(20) < -80'den yukarı sekme
+  let dualConfluenceSignal: CourtneyStrategySummary['dualConfluenceSignal'] = {
+    state: 'none',
+    label: 'Aktif Sinyal Yok',
+    barIndex: null,
+    price: null,
+  };
+
+  for (let k = n; k >= Math.max(1, n - 6); k--) {
+    const sK = stochSlow13_8_4[k];
+    const sPrevK = stochSlow13_8_4[k - 1];
+    const c20K = cci20[k];
+    const c20PrevK = cci20[k - 1];
+    const cK = candles[k];
+
+    if (sK.slowK != null && sK.slowD != null && sPrevK.slowK != null && sPrevK.slowD != null &&
+        c20K != null && c20PrevK != null) {
+      // Bullish Courtney Confluence:
+      // 1. Stoch (13,8,4) oversold (< 28) ve yukarı kesişti
+      const stochBullCross = sPrevK.slowK <= sPrevK.slowD && sK.slowK > sK.slowD && sPrevK.slowK <= 28;
+      // 2. CCI (20) aşırı satım bölgesinden (-100 veya -80 altı) yukarı kanca yaptı
+      const cciBullTurn = (c20PrevK <= -75 && c20K > c20PrevK) || (c20PrevK <= -100 && c20K > -100);
+
+      if (stochBullCross && (cciBullTurn || c20K >= -100)) {
+        const barsAgo = n - k;
+        dualConfluenceSignal = {
+          state: 'buy_confluence',
+          label: barsAgo === 0
+            ? 'Courtney Dual AL Kesişimi (Stoch 13,8,4 + CCI 20)'
+            : `Courtney AL (${barsAgo} bar önce)`,
+          barIndex: k,
+          price: cK.close,
+          note: 'Stoch (13,8,4) < 25 Boğa Kesişimi + CCI (20) Aşırı Satım Dönüşü Onayı',
+        };
+        break;
+      }
+
+      // Bearish Courtney Confluence:
+      // 1. Stoch (13,8,4) overbought (> 72) ve aşağı kesişti
+      const stochBearCross = sPrevK.slowK >= sPrevK.slowD && sK.slowK < sK.slowD && sPrevK.slowK >= 72;
+      // 2. CCI (20) aşırı alım bölgesinden (+75 veya +100 üzeri) aşağı kanca yaptı
+      const cciBearTurn = (c20PrevK >= 75 && c20K < c20PrevK) || (c20PrevK >= 100 && c20K < 100);
+
+      if (stochBearCross && (cciBearTurn || c20K <= 100)) {
+        const barsAgo = n - k;
+        dualConfluenceSignal = {
+          state: 'sell_confluence',
+          label: barsAgo === 0
+            ? 'Courtney Dual SAT Kesişimi (Stoch 13,8,4 + CCI 20)'
+            : `Courtney SAT (${barsAgo} bar önce)`,
+          barIndex: k,
+          price: cK.close,
+          note: 'Stoch (13,8,4) > 75 Ayı Kesişimi + CCI (20) Zirve Dönüşü Onayı',
+        };
+        break;
+      }
+    }
+  }
+
+  return {
+    stoch13_8_4: {
+      slowK: curStoch.slowK,
+      slowD: curStoch.slowD,
+      state: stochState,
+      label: stochLabel,
+    },
+    cci20Value: curCci20 != null ? Number(curCci20.toFixed(1)) : null,
+    cci20State,
+    dualConfluenceSignal,
+    trendingIgnoreOscWarning,
+    divergence,
+  };
+}
+
+/**
  * 6. MACD (12, 26, 9) Hesaplaması ve Yeni Trend Başlangıcı Kesişim Tespiti
  */
 export function computeMACD(
@@ -2382,7 +3002,10 @@ export function analyzeTechnicalStructure(candles: Candle[]): TechnicalStructure
   const ma8 = computeEMA(candles, 8);
   const ma21 = computeEMA(candles, 21);
   const ema10 = computeEMA(candles, 10);
+  const ema34 = computeEMA(candles, 34);
   const ema50 = computeEMA(candles, 50);
+  const ema204 = computeEMA(candles, 204);
+  const ema14 = computeEMA(candles, 14);
   const zones = detectSupportResistanceZones(candles);
   const trendChannel = detectTrendChannel(candles);
   const geometricStructure = detectGeometricStructure(candles);
@@ -2391,6 +3014,9 @@ export function analyzeTechnicalStructure(candles: Candle[]): TechnicalStructure
   const bollinger = computeBollingerBands(candles, 20, 2);
   const macd = computeMACD(candles, 12, 26, 9);
   const rsi14 = computeRSI(candles, 14);
+  const cci14 = computeCCI(candles, 14);
+  const cci50 = computeCCI(candles, 50);
+  const cci50Strategy = computeCci50Strategy(candles, cci14, cci50, ema14, ema34, ema204);
   const stochastic = computeStochastics(candles, 14, 3);
   const sakataMorris = computeSakataMorrisSummary(
     candles,
@@ -2414,6 +3040,16 @@ export function analyzeTechnicalStructure(candles: Candle[]): TechnicalStructure
     adx14,
     rsi2,
     stochRsi
+  );
+
+  const cci20 = computeCCI(candles, 20);
+  const stochSlow13_8_4 = computeSlowStochastic13_8_4(candles);
+  const courtneyStrategy = computeCourtneyStrategy(
+    candles,
+    stochSlow13_8_4,
+    cci20,
+    trendChannel,
+    marketRegime
   );
 
   let bollingerStatus = 'Veri hesaplanıyor';
@@ -2508,7 +3144,9 @@ export function analyzeTechnicalStructure(candles: Candle[]): TechnicalStructure
     ma8,
     ma21,
     ema10,
+    ema34,
     ema50,
+    ema204,
     zones,
     trendChannel,
     geometricStructure,
@@ -2520,6 +3158,12 @@ export function analyzeTechnicalStructure(candles: Candle[]): TechnicalStructure
     macd,
     macdStatus,
     rsi14,
+    cci14,
+    cci50,
+    cci50Strategy,
+    cci20,
+    stochSlow13_8_4,
+    courtneyStrategy,
     stochastic,
     sakataMorris,
     bollingerStrategy,
@@ -2708,6 +3352,56 @@ export function evaluatePatternsConfluence(
           (!isBull && (ks.channelState === 'bear_crawl' || ks.channelState === 'downtrend')))
       ) {
         factors.push('Keltner Orta Bandı (20 EMA) Dinamik Trend Tepkisi');
+      }
+    }
+
+    // 5C. The 50 CCI & 34 EMA Stratejisi Uyumu (Buzz / Traders Haven)
+    if (factors.length < 5 && tech.cci50Strategy) {
+      const cs = tech.cci50Strategy;
+      if (
+        isBull &&
+        (cs.setup5034.state === 'buy_5034' ||
+          cs.setup5034z.state === 'buy_5034z' ||
+          cs.setup50140.state === 'buy_50140')
+      ) {
+        const setupName =
+          cs.setup5034.state === 'buy_5034'
+            ? '5034 Dönüş'
+            : cs.setup5034z.state === 'buy_5034z'
+              ? '5034z ZLR'
+              : '50140 Devam';
+        factors.push(`50 CCI Onayı (${setupName})`);
+      } else if (
+        !isBull &&
+        (cs.setup5034.state === 'sell_5034' ||
+          cs.setup5034z.state === 'sell_5034z' ||
+          cs.setup50140.state === 'sell_50140')
+      ) {
+        const setupName =
+          cs.setup5034.state === 'sell_5034'
+            ? '5034 Dönüş'
+            : cs.setup5034z.state === 'sell_5034z'
+              ? '5034z ZLR'
+              : '50140 Devam';
+        factors.push(`50 CCI Onayı (${setupName})`);
+      } else if (isBull && cs.trendState === 'bull_trend' && (cs.cci50Value ?? 0) > 20) {
+        factors.push('50 CCI Pozitif Histogram + 34 EMA Dinamik Destek');
+      } else if (!isBull && cs.trendState === 'bear_trend' && (cs.cci50Value ?? 0) < -20) {
+        factors.push('50 CCI Negatif Histogram + 34 EMA Dinamik Direnç');
+      }
+    }
+
+    // 5D. Courtney Capital Dual Osilatör Onayı (Neville Chester — Slow Stoch 13,8,4 & CCI 20)
+    if (factors.length < 5 && tech.courtneyStrategy) {
+      const court = tech.courtneyStrategy;
+      if (isBull && court.dualConfluenceSignal.state === 'buy_confluence') {
+        factors.push('Courtney Capital Onayı (Stoch 13,8,4 + CCI 20 Dip Dönüşü)');
+      } else if (!isBull && court.dualConfluenceSignal.state === 'sell_confluence') {
+        factors.push('Courtney Capital Onayı (Stoch 13,8,4 + CCI 20 Zirve Dönüşü)');
+      } else if (isBull && court.divergence.kind === 'bullish_divergence') {
+        factors.push('Courtney Çift Uyumsuzluk (Pozitif Boğa Divergence)');
+      } else if (!isBull && court.divergence.kind === 'bearish_divergence') {
+        factors.push('Courtney Çift Uyumsuzluk (Negatif Ayı Divergence)');
       }
     }
 

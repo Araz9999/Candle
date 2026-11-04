@@ -386,6 +386,64 @@ export interface StochasticPoint {
   pctD: number | null; // %D(3)
 }
 
+export interface CciPoint {
+  cci14: number | null;
+  cci50: number | null;
+}
+
+export interface Cci50StrategySummary {
+  trendState: 'bull_trend' | 'bear_trend' | 'chop' | 'neutral';
+  trendLabel: string;
+  ema34Slope: 'up' | 'down' | 'flat';
+  cci50Value: number | null;
+  cci14Value: number | null;
+  isChopZone: boolean;
+  setup5034: {
+    state: 'buy_5034' | 'sell_5034' | 'none';
+    label: string;
+    barIndex: number | null;
+    price: number | null;
+    confirmationNote?: string;
+  };
+  setup5034z: {
+    state: 'buy_5034z' | 'sell_5034z' | 'none';
+    label: string;
+    barIndex: number | null;
+    price: number | null;
+    confirmationNote?: string;
+  };
+  setup50140: {
+    state: 'buy_50140' | 'sell_50140' | 'none';
+    label: string;
+    barIndex: number | null;
+    price: number | null;
+    confirmationNote?: string;
+  };
+}
+
+export interface CourtneyStrategySummary {
+  stoch13_8_4: {
+    slowK: number | null;
+    slowD: number | null;
+    state: 'oversold_cross' | 'overbought_cross' | 'neutral';
+    label: string;
+  };
+  cci20Value: number | null;
+  cci20State: 'overbought' | 'oversold' | 'surge_bull' | 'surge_bear' | 'neutral';
+  dualConfluenceSignal: {
+    state: 'buy_confluence' | 'sell_confluence' | 'none';
+    label: string;
+    barIndex: number | null;
+    price: number | null;
+    note?: string;
+  };
+  trendingIgnoreOscWarning: boolean;
+  divergence: {
+    kind: 'bullish_divergence' | 'bearish_divergence' | 'none';
+    label: string;
+  };
+}
+
 export interface SakataMorrisSummary {
   ema10Trend: 'uptrend' | 'downtrend' | 'flat';
   ema10Label: string;
@@ -401,10 +459,18 @@ export interface TechnicalStructureAnalysis {
   marketRegime: MarketRegimeInfo;
   supplyDemandZones: SupplyDemandZone[];
   ema10: Array<number | null>;
+  ema34: Array<number | null>;
   ema50: Array<number | null>;
+  ema204: Array<number | null>;
   ma8: Array<number | null>;
   ma21: Array<number | null>;
   rsi14: Array<number | null>;
+  cci14: Array<number | null>;
+  cci20: Array<number | null>;
+  cci50: Array<number | null>;
+  stochSlow13_8_4: Array<{ slowK: number | null; slowD: number | null }>;
+  cci50Strategy: Cci50StrategySummary;
+  courtneyStrategy: CourtneyStrategySummary;
   stochastic: StochasticPoint[];
   sakataMorris: SakataMorrisSummary;
   bollingerStrategy: BollingerStrategySummary;
@@ -437,6 +503,8 @@ export type ChartOverlayKey =
   | 'showBollinger'
   | 'useAdaptiveBollinger'
   | 'showKeltner'
+  | 'showCCI50'
+  | 'showCourtney'
   | 'showMACD'
   | 'showMorrisFilter';
 
@@ -448,7 +516,9 @@ export interface TechniqueGuideItem {
     | 'Greg Morris'
     | 'Bollinger Stratejisi'
     | 'Ampirik Optimizasyon (SFU)'
-    | 'Keltner Stratejisi';
+    | 'Keltner Stratejisi'
+    | '50 CCI Stratejisi'
+    | 'Courtney Capital';
   category:
     | 'Seviye & Trend'
     | 'Formasyon & Boşluk'
@@ -498,7 +568,15 @@ export interface TechniqueGuideItem {
     | 'keltner_atr_anatomy'
     | 'keltner_adx_breakout'
     | 'keltner_rsi2_range'
-    | 'keltner_stochrsi_pullback';
+    | 'keltner_stochrsi_pullback'
+    | 'cci_50_34_anatomy'
+    | 'cci_5034_reversal'
+    | 'cci_5034z_pullback'
+    | 'cci_50140_continuation'
+    | 'courtney_dual_oscillator'
+    | 'courtney_stoch_13_8_4'
+    | 'courtney_cci20_coincidental'
+    | 'courtney_trend_ignore_filter';
 }
 
 export interface PatternSettings {
@@ -516,7 +594,7 @@ export interface PatternSettings {
   showEMA20: boolean;
   showEMA50: boolean;
   showVolume: boolean;
-  // Grafik Okuma, Trading Bible, Greg Morris, Bollinger Optimizasyon & Keltner Katmanları
+  // Grafik Okuma, Trading Bible, Greg Morris, Bollinger, Keltner, 50 CCI & Courtney Katmanları
   showSRZones: boolean;
   showSupplyDemand: boolean;
   showMA8_21: boolean;
@@ -526,6 +604,8 @@ export interface PatternSettings {
   showBollinger: boolean;
   useAdaptiveBollinger: boolean; // Williams SFU Optimal (N*, D*) Bollinger Channel
   showKeltner: boolean; // Keltner Channel (20 EMA ± 2 ATR) — Stubbs 3-Way Strategy
+  showCCI50: boolean; // 50 CCI & 34 EMA (5034, 5034z, 50140, 204 EMA) — Buzz / Traders Haven
+  showCourtney: boolean; // Courtney Capital (Slow Stoch 13,8,4 + CCI 20 + Trigger Line) — Neville
   showMACD: boolean;
   showMorrisFilter: boolean; // RSI(14) & Stochastic %D(14,3) Pre-Signal Pane
 }

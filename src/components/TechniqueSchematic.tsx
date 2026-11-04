@@ -1167,6 +1167,416 @@ export function TechniqueSchematic({ diagramType, isDark = true }: TechniqueSche
           </text>
         </g>
       )}
+
+      {diagramType === 'cci_50_34_anatomy' && (
+        <g>
+          {/* Price & EMA pane (Y: 10..80) */}
+          {/* 204 EMA (HTF 6:1 baseline) */}
+          <path d="M 20 62 Q 140 54 280 44" fill="none" stroke="#6366F1" strokeWidth={1.5} strokeDasharray="3 3" />
+          <text x={268} y={38} textAnchor="end" className="text-[7.5px] font-mono font-bold fill-indigo-500">
+            204 EMA (6:1 HTF)
+          </text>
+
+          {/* 34 EMA: Brown/Red on left down-slope, Cyan on right up-slope */}
+          <path d="M 20 38 Q 90 52 140 56" fill="none" stroke="#991B1B" strokeWidth={2.4} />
+          <path d="M 140 56 Q 190 60 280 26" fill="none" stroke="#06B6D4" strokeWidth={2.4} />
+          <text x={78} y={66} className="text-[7.5px] font-mono font-bold fill-rose-600">
+            34 EMA (Ayı)
+          </text>
+          <text x={220} y={50} className="text-[7.5px] font-mono font-bold fill-cyan-500">
+            34 EMA (Boğa Cyan)
+          </text>
+
+          {/* Price path */}
+          <polyline
+            points="24,30 54,46 88,40 120,62 148,44 186,32 216,42 254,18 276,14"
+            fill="none"
+            stroke={strokeMain}
+            strokeWidth={1.9}
+          />
+
+          {/* Sub-pane Separator & Zero Line */}
+          <line x1={18} y1={86} x2={282} y2={86} stroke="#64748B" strokeWidth={1.2} />
+          <text x={24} y={96} className="text-[7.5px] font-mono font-bold fill-slate-400">
+            50 CCI SIFIR HATTI (= DÜZ 50 EMA)
+          </text>
+
+          {/* 50 CCI Histogram Bars (Red when < 0, Green when > 0) */}
+          <line x1={40} y1={86} x2={40} y2={98} stroke="#DC2626" strokeWidth={4} />
+          <line x1={56} y1={86} x2={56} y2={104} stroke="#DC2626" strokeWidth={4} />
+          <line x1={72} y1={86} x2={72} y2={108} stroke="#DC2626" strokeWidth={4} />
+          <line x1={88} y1={86} x2={88} y2={100} stroke="#DC2626" strokeWidth={4} />
+          <line x1={104} y1={86} x2={104} y2={95} stroke="#DC2626" strokeWidth={4} />
+          <line x1={120} y1={86} x2={120} y2={90} stroke="#DC2626" strokeWidth={4} />
+          <line x1={136} y1={86} x2={136} y2={87} stroke="#DC2626" strokeWidth={4} />
+
+          <line x1={152} y1={86} x2={152} y2={76} stroke="#16A34A" strokeWidth={4} />
+          <line x1={168} y1={86} x2={168} y2={70} stroke="#16A34A" strokeWidth={4} />
+          <line x1={184} y1={86} x2={184} y2={68} stroke="#16A34A" strokeWidth={4} />
+          <line x1={200} y1={86} x2={200} y2={72} stroke="#16A34A" strokeWidth={4} />
+          <line x1={216} y1={86} x2={216} y2={64} stroke="#16A34A" strokeWidth={4} />
+          <line x1={232} y1={86} x2={232} y2={60} stroke="#16A34A" strokeWidth={4} />
+          <line x1={248} y1={86} x2={248} y2={56} stroke="#16A34A" strokeWidth={4} />
+          <line x1={264} y1={86} x2={264} y2={54} stroke="#16A34A" strokeWidth={4} />
+
+          {/* 14 CCI thin line overlaid */}
+          <polyline
+            points="24,96 54,108 88,102 120,95 146,80 180,64 216,74 250,56 276,52"
+            fill="none"
+            stroke="#F59E0B"
+            strokeWidth={1.5}
+          />
+          <text x={268} y={136} textAnchor="end" className="text-[7.5px] font-mono font-bold fill-amber-500">
+            Sarı Çizgi: 14 CCI (14 EMA Eşdeğeri)
+          </text>
+        </g>
+      )}
+
+      {diagramType === 'cci_5034_reversal' && (
+        <g>
+          {/* Downtrend transitioning to Uptrend: 34 EMA changes from red to cyan */}
+          <path d="M 20 42 Q 100 58 142 62" fill="none" stroke="#991B1B" strokeWidth={2.4} />
+          <path d="M 142 62 Q 180 64 280 32" fill="none" stroke="#06B6D4" strokeWidth={2.4} />
+
+          {/* Price drops below 34 EMA, forms S&R double bottom (Shamu), breaks above 34 EMA */}
+          <polyline
+            points="24,34 56,66 84,54 116,72 142,54 184,36 218,44 268,20"
+            fill="none"
+            stroke={strokeMain}
+            strokeWidth={2}
+          />
+
+          {/* Trigger point at X: 142 where price crosses 34 EMA and 50 CCI crosses 0 */}
+          <line x1={142} y1={18} x2={142} y2={128} stroke="#10B981" strokeDasharray="3 2" strokeWidth={1.5} />
+          <circle cx={142} cy={54} r={5} fill="#16A34A" />
+          <text x={148} y={30} className="text-[8px] font-mono font-bold fill-emerald-600 dark:fill-emerald-400">
+            5034 ALIŞ DÖNÜŞ TETİĞİ
+          </text>
+          <text x={148} y={40} className="text-[7px] font-mono fill-slate-500">
+            Fiyat &gt; 34 EMA Kapanışı
+          </text>
+
+          {/* Sub-pane Zero Line */}
+          <line x1={18} y1={98} x2={282} y2={98} stroke="#64748B" strokeWidth={1.2} />
+          <text x={22} y={108} className="text-[7px] font-mono fill-slate-400">
+            50 CCI SIFIR ÇİZGİSİ
+          </text>
+
+          {/* 50 CCI histogram turning from red to green exactly at 142 */}
+          <line x1={56} y1={98} x2={56} y2={114} stroke="#DC2626" strokeWidth={4} />
+          <line x1={84} y1={98} x2={84} y2={108} stroke="#DC2626" strokeWidth={4} />
+          <line x1={116} y1={98} x2={116} y2={116} stroke="#DC2626" strokeWidth={4} />
+          <line x1={142} y1={98} x2={142} y2={84} stroke="#16A34A" strokeWidth={5} />
+          <line x1={170} y1={98} x2={170} y2={78} stroke="#16A34A" strokeWidth={4} />
+          <line x1={200} y1={98} x2={200} y2={74} stroke="#16A34A" strokeWidth={4} />
+          <line x1={230} y1={98} x2={230} y2={70} stroke="#16A34A" strokeWidth={4} />
+          <circle cx={142} cy={84} r={4} fill="#16A34A" />
+          <text x={148} y={92} className="text-[7.5px] font-mono font-bold fill-emerald-600 dark:fill-emerald-400">
+            50 CCI &gt; 0 Kesişimi
+          </text>
+        </g>
+      )}
+
+      {diagramType === 'cci_5034z_pullback' && (
+        <g>
+          {/* Strong Upward Sloping 34 EMA (Cyan) */}
+          <path d="M 20 78 Q 120 70 280 26" fill="none" stroke="#06B6D4" strokeWidth={2.4} />
+
+          {/* Price Path: Initial 5034 surge, pullback to 34 EMA equilibrium, bounce */}
+          <polyline
+            points="24,70 64,42 98,32 144,52 192,24 238,18 276,12"
+            fill="none"
+            stroke={strokeMain}
+            strokeWidth={2.1}
+          />
+
+          {/* Test of 34 EMA at bar 144 */}
+          <circle cx={144} cy={52} r={5} fill="#16A34A" />
+          <text x={148} y={44} className="text-[8px] font-mono font-bold fill-emerald-600 dark:fill-emerald-400">
+            5034z (34 EMA TESTİ)
+          </text>
+
+          {/* Sub-pane Zero Line */}
+          <line x1={18} y1={94} x2={282} y2={94} stroke="#64748B" strokeWidth={1.2} />
+          <text x={22} y={104} className="text-[7px] font-mono fill-slate-400">
+            14 CCI SIFIR HATTI (ZLR BÖLGESİ)
+          </text>
+
+          {/* 50 CCI stays firmly green in background */}
+          <rect x={24} y={84} width={254} height={8} fill="rgba(22, 163, 74, 0.15)" />
+          <text x={276} y={90} textAnchor="end" className="text-[7px] font-mono fill-emerald-600">
+            50 CCI &gt; 0 (Yeşil Trend Güvencesi)
+          </text>
+
+          {/* 14 CCI ZLR Hook: pulls back to zero, hooks and rejects sharply up */}
+          <polyline
+            points="24,64 64,54 98,58 144,92 168,76 210,60 258,54"
+            fill="none"
+            stroke="#F59E0B"
+            strokeWidth={2}
+          />
+          <circle cx={144} cy={92} r={4.5} fill="#F59E0B" />
+          <text x={148} y={114} className="text-[7.5px] font-mono font-bold fill-amber-500">
+            14 CCI ZLR Kancası (Sıfırdan Sekme)
+          </text>
+        </g>
+      )}
+
+      {diagramType === 'cci_50140_continuation' && (
+        <g>
+          {/* Established strong uptrend: 34 EMA (Cyan) and 14 EMA (Yellow) */}
+          <path d="M 20 84 Q 140 76 280 34" fill="none" stroke="#06B6D4" strokeWidth={2.4} />
+          <path d="M 20 74 Q 140 60 280 20" fill="none" stroke="#EAB308" strokeWidth={1.6} strokeDasharray="3 2" />
+
+          {/* Price cuts through 14 EMA towards 34 EMA (V-pullback), then crosses back above 14 EMA */}
+          <polyline
+            points="24,54 62,32 94,24 136,66 166,42 208,22 250,14 278,10"
+            fill="none"
+            stroke={strokeMain}
+            strokeWidth={2.1}
+          />
+
+          {/* Trigger point where price reclaims 14 EMA and 14 CCI crosses 0 */}
+          <line x1={166} y1={12} x2={166} y2={128} stroke="#10B981" strokeDasharray="3 2" strokeWidth={1.5} />
+          <circle cx={166} cy={42} r={5} fill="#16A34A" />
+          <text x={172} y={38} className="text-[8px] font-mono font-bold fill-emerald-600 dark:fill-emerald-400">
+            50140 TREND DEVAM GİRİŞİ
+          </text>
+          <text x={172} y={48} className="text-[7px] font-mono fill-slate-500">
+            14 EMA Geri Kazanıldı
+          </text>
+
+          {/* Sub-pane Zero Line */}
+          <line x1={18} y1={96} x2={282} y2={96} stroke="#64748B" strokeWidth={1.2} />
+          <text x={22} y={106} className="text-[7px] font-mono fill-slate-400">
+            14 CCI SIFIR HATTI
+          </text>
+
+          {/* 50 CCI is deep in green (> +50) */}
+          <rect x={24} y={80} width={254} height={12} fill="rgba(22, 163, 74, 0.20)" />
+          <text x={276} y={88} textAnchor="end" className="text-[7px] font-mono font-bold fill-emerald-600">
+            50 CCI &gt; +50 (Oturmuş Güçlü Boğa)
+          </text>
+
+          {/* 14 CCI deep dip into negative zone (-100), then crossing back through 0 */}
+          <polyline
+            points="24,68 62,60 94,62 136,128 166,94 208,70 250,62 278,58"
+            fill="none"
+            stroke="#F59E0B"
+            strokeWidth={2}
+          />
+          <circle cx={136} cy={128} r={3.5} fill="#DC2626" />
+          <text x={84} y={138} className="text-[7px] font-mono fill-rose-500">
+            Derin V-Düzeltmesi (&lt;-75)
+          </text>
+          <circle cx={166} cy={94} r={4.5} fill="#16A34A" />
+          <text x={172} y={108} className="text-[7.5px] font-mono font-bold fill-emerald-600 dark:fill-emerald-400">
+            14 CCI Sıfırı Tekrar Kırdı (Üst TF ZLR)
+          </text>
+        </g>
+      )}
+
+      {/* COURTNEY CAPITAL 1: Courtney Dual Osilatör Sistemi (Slow Stoch 13,8,4 + CCI 20 + Trendline Bounce) */}
+      {diagramType === 'courtney_dual_oscillator' && (
+        <g>
+          {/* Main Trendline Support */}
+          <line x1={20} y1={74} x2={270} y2={22} stroke="#38BDF8" strokeWidth={1.8} strokeDasharray="4 2" />
+          <text x={26} y={70} className="text-[7.5px] font-mono fill-sky-500 font-semibold">
+            Ana Yükselen Trend Çizgisi (Destek)
+          </text>
+
+          {/* Price Path bouncing on trendline */}
+          <polyline
+            points="22,64 58,40 92,54 136,32 172,48 184,46 226,24 268,16"
+            fill="none"
+            stroke={strokeMain}
+            strokeWidth={2}
+          />
+          {/* Counter-trend Trigger Line */}
+          <line x1={136} y1={30} x2={184} y2={48} stroke="#F59E0B" strokeWidth={1.4} strokeDasharray="2 2" />
+          <text x={140} y={26} className="text-[7px] font-mono fill-amber-500 font-semibold">
+            Tetik Çizgisi Kırılımı
+          </text>
+
+          {/* Courtney Dual Trigger Point */}
+          <circle cx={184} cy={46} r={5} fill="#16A34A" />
+          <line x1={184} y1={12} x2={184} y2={138} stroke="#10B981" strokeWidth={1.4} strokeDasharray="3 2" />
+          <text x={192} y={42} className="text-[8px] font-mono font-bold fill-emerald-600 dark:fill-emerald-400">
+            COURTNEY DUAL AL GİRİŞİ
+          </text>
+
+          {/* Sub-pane Separator & Baseline */}
+          <line x1={18} y1={92} x2={282} y2={92} stroke={gridStroke} strokeWidth={1.2} />
+
+          {/* Slow Stoch (13,8,4) %K and %D crossover under 20-25 */}
+          <text x={22} y={104} className="text-[7px] font-mono fill-teal-500 font-bold">
+            Stoch (13,8,4) &lt; 25 Kesişimi
+          </text>
+          <line x1={22} y1={118} x2={280} y2={118} stroke="rgba(20,184,166,0.25)" strokeDasharray="2 2" />
+          <polyline
+            points="24,110 70,102 110,106 150,126 184,114 220,98 274,96"
+            fill="none"
+            stroke="#14B8A6"
+            strokeWidth={1.8}
+          />
+          <polyline
+            points="24,112 70,105 110,108 150,128 184,122 220,104 274,98"
+            fill="none"
+            stroke="#94A3B8"
+            strokeWidth={1.2}
+            strokeDasharray="2 2"
+          />
+          <circle cx={184} cy={114} r={3} fill="#14B8A6" />
+
+          {/* CCI (20) hook from below -100 */}
+          <text x={22} y={132} className="text-[7px] font-mono fill-amber-500 font-bold">
+            CCI (20) -100 Altından Yukarı Kanca
+          </text>
+          <polyline
+            points="24,124 70,118 110,120 152,138 184,126 226,110 274,104"
+            fill="none"
+            stroke="#F59E0B"
+            strokeWidth={1.8}
+          />
+          <circle cx={184} cy={126} r={3} fill="#F59E0B" />
+        </g>
+      )}
+
+      {/* COURTNEY CAPITAL 2: Slow Stochastic (13, 8, 4) Momentum & Speed of Price */}
+      {diagramType === 'courtney_stoch_13_8_4' && (
+        <g>
+          {/* Overbought (>80) & Oversold (<20) Zones */}
+          <rect x={18} y={16} width={264} height={20} fill="rgba(239, 68, 68, 0.12)" />
+          <line x1={18} y1={36} x2={282} y2={36} stroke="#EF4444" strokeWidth={1} strokeDasharray="3 2" />
+          <text x={24} y={28} className="text-[7.5px] font-mono fill-rose-500 font-bold">
+            AŞIRI ALIM BÖLGESİ (&gt; 80)
+          </text>
+
+          <rect x={18} y={108} width={264} height={22} fill="rgba(34, 197, 94, 0.12)" />
+          <line x1={18} y1={108} x2={282} y2={108} stroke="#22C55E" strokeWidth={1} strokeDasharray="3 2" />
+          <text x={24} y={122} className="text-[7.5px] font-mono fill-emerald-600 dark:fill-emerald-400 font-bold">
+            AŞIRI SATIM BÖLGESİ (&lt; 20)
+          </text>
+
+          {/* George Lane law annotation */}
+          <text x={150} y={72} textAnchor="middle" className="text-[7px] font-mono fill-slate-400">
+            Lane Yasası: Momentum hızı fiyattan önce yön değiştirir
+          </text>
+
+          {/* Slow %K (13 lookback, 8 SMA smooth) */}
+          <polyline
+            points="24,52 64,24 100,28 138,58 174,116 208,94 246,32 278,28"
+            fill="none"
+            stroke="#0EA5E9"
+            strokeWidth={2}
+          />
+          {/* Slow %D (4 SMA Trigger line) */}
+          <polyline
+            points="24,56 64,30 100,26 138,52 174,122 208,106 246,40 278,32"
+            fill="none"
+            stroke="#F59E0B"
+            strokeWidth={1.5}
+            strokeDasharray="3 2"
+          />
+
+          {/* Bullish Cross < 20 */}
+          <circle cx={194} cy={102} r={4.5} fill="#16A34A" />
+          <text x={198} y={116} className="text-[7.5px] font-mono font-bold fill-emerald-600 dark:fill-emerald-400">
+            %K &gt; %D Boğa Kesişimi (&lt;20)
+          </text>
+
+          {/* Bearish Cross > 80 */}
+          <circle cx={88} cy={26} r={4.5} fill="#DC2626" />
+          <text x={94} y={22} className="text-[7.5px] font-mono font-bold fill-rose-600">
+            %K &lt; %D Ayı Kesişimi (&gt;80)
+          </text>
+        </g>
+      )}
+
+      {/* COURTNEY CAPITAL 3: CCI (20) Coincidental Trend vs Leading Divergence */}
+      {diagramType === 'courtney_cci20_coincidental' && (
+        <g>
+          {/* +100 & -100 Lines */}
+          <line x1={18} y1={38} x2={282} y2={38} stroke="#EF4444" strokeWidth={1.2} strokeDasharray="3 2" />
+          <text x={24} y={32} className="text-[7.5px] font-mono font-bold fill-rose-500">
+            +100 TREND KOPUŞ / AŞIRI ALIM (0.015 Katsayısı)
+          </text>
+
+          <line x1={18} y1={72} x2={282} y2={72} stroke="#64748B" strokeWidth={1} strokeDasharray="2 2" />
+          <text x={24} y={70} className="text-[7px] font-mono fill-slate-400">
+            0 Denge Ekseni
+          </text>
+
+          <line x1={18} y1={108} x2={282} y2={108} stroke="#22C55E" strokeWidth={1.2} strokeDasharray="3 2" />
+          <text x={24} y={120} className="text-[7.5px] font-mono font-bold fill-emerald-600 dark:fill-emerald-400">
+            -100 AŞIRI SATIM BÖLGESİ
+          </text>
+
+          {/* Coincidental Trend Start badge */}
+          <rect x={58} y={30} width={76} height={14} fill="rgba(14,165,233,0.18)" rx={3} />
+          <text x={62} y={40} className="text-[7px] font-mono font-bold fill-sky-600 dark:fill-sky-400">
+            Eşzamanlı Trend Başlangıcı (+100)
+          </text>
+
+          {/* Leading Divergence Slope */}
+          <line x1={180} y1={30} x2={250} y2={46} stroke="#EF4444" strokeWidth={1.8} />
+          <text x={186} y={24} className="text-[7.5px] font-mono font-bold fill-rose-600">
+            Ayı Divergence (Alçalan Tepe)
+          </text>
+
+          {/* CCI Line */}
+          <polyline
+            points="24,84 62,34 98,24 136,44 180,30 216,56 250,46 278,92"
+            fill="none"
+            stroke="#0EA5E9"
+            strokeWidth={2}
+          />
+          <circle cx={62} cy={34} r={3.5} fill="#0EA5E9" />
+          <circle cx={180} cy={30} r={3.5} fill="#EF4444" />
+          <circle cx={250} cy={46} r={3.5} fill="#EF4444" />
+        </g>
+      )}
+
+      {/* COURTNEY CAPITAL 4: Strong Trend - Ignore Overbought / Oversold Filter */}
+      {diagramType === 'courtney_trend_ignore_filter' && (
+        <g>
+          {/* Strong Upward Trend Band */}
+          <polygon
+            points="20,126 120,74 274,18 274,38 120,94 20,140"
+            fill="rgba(34, 197, 94, 0.10)"
+          />
+          <line x1={20} y1={126} x2={274} y2={18} stroke="#22C55E" strokeWidth={1.5} />
+          <line x1={20} y1={140} x2={274} y2={38} stroke="#22C55E" strokeWidth={1.5} />
+
+          {/* Price Path riding high in channel */}
+          <polyline
+            points="24,130 58,102 84,112 128,76 160,86 210,44 246,52 278,22"
+            fill="none"
+            stroke={strokeMain}
+            strokeWidth={2}
+          />
+
+          {/* Stoch Overbought Pin Notice (Slayt 15) */}
+          <rect x={126} y={48} width={146} height={26} fill="rgba(239, 68, 68, 0.16)" rx={4} stroke="#EF4444" />
+          <text x={132} y={60} className="text-[7.5px] font-mono font-bold fill-rose-600 dark:fill-rose-400">
+            AŞIRI ALIMI YOK SAY! (IGNORE RULE)
+          </text>
+          <text x={132} y={70} className="text-[6.8px] font-mono fill-slate-300">
+            Güçlü Trendde Stoch &gt; 80 Zayıflık Değil Güçtür
+          </text>
+
+          {/* Valid Buy at Pullback */}
+          <circle cx={160} cy={86} r={4.5} fill="#16A34A" />
+          <text x={168} y={98} className="text-[7.5px] font-mono font-bold fill-emerald-600 dark:fill-emerald-400">
+            Yalnızca Trend Desteğinde AL (&lt;25)
+          </text>
+
+          {/* Bottom rule reminder */}
+          <text x={26} y={26} className="text-[8px] font-mono font-bold fill-sky-500">
+            Neville Chester: &quot;Trend Varken Asla Erken Kısa Açma&quot;
+          </text>
+        </g>
+      )}
     </svg>
   );
 }
